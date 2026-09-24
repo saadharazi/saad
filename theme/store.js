@@ -1,140 +1,153 @@
+/*
+  ثيم المتجر — JS (النسخة المقروءة)
+  للصق بالمتجر استخدم store.min.js (خانة الـ JS بالمتجر تقطع الكود الطويل).
+  قاعدة: ما ننقل ولا نحذف أي عنصر من عناصر المتجر، بس نضيف عناصرنا.
+*/
 (function () {
-  // روابط البنرات: تقدر تغيّرها لرابط صورة أو GIF من متجرك
+  /* ================= الإعدادات ================= */
   var IMG = 'https://cdn.jsdelivr.net/gh/saadharazi/saad@9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
-  // مصدر احتياطي لو jsDelivr ما حمّل
   var RAW = 'https://raw.githubusercontent.com/saadharazi/saad/9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
-  var TOP = IMG + 'top-banner.webp';
-  var PAY = IMG + 'payments.webp';
+  var TOP_IMG = 'top-banner.webp'; // البنر العلوي (صورة أو GIF)
+  var PAY_IMG = 'payments.webp';   // بنر طرق الدفع
+  var CART = /أضف للسلة|اضف للسلة|add to cart/i;
+  var REVIEWS = /تقييم|آراء|اراء|قالوا|عملاؤنا|عملائنا|review|testimonial/i;
 
-  // شريط الأقسام تحت الهيدر، من روابط الأقسام الموجودة بالمتجر
-  function cats() {
-    var h = document.querySelector('header');
+  // الصفحة الرئيسية بس: "/" أو "/ar" أو "/en"
+  function isHome() {
+    return /^\/(ar|en)?\/?$/.test(location.pathname);
+  }
+
+  /* ============ 1) شريط الأقسام (للجوال) ============ */
+  function catBar() {
+    var header = document.querySelector('header');
     var bar = document.querySelector('.st-cats');
-    if (!bar && h) {
+    if (!bar && header) {
       var links = document.querySelectorAll('header a[href*="/category/"]');
       if (!links.length) return;
       bar = document.createElement('nav');
       bar.className = 'st-cats';
-      add(bar, '/products', 'جميع المنتجات');
+      addLink(bar, '/products', 'جميع المنتجات');
       links.forEach(function (a) {
-        var t = a.textContent.trim();
-        if (t && !bar.querySelector('[href="' + a.pathname + '"]')) add(bar, a.pathname, t);
+        var text = a.textContent.trim();
+        if (text && !bar.querySelector('[href="' + a.pathname + '"]')) addLink(bar, a.pathname, text);
       });
-      h.after(bar);
+      header.after(bar);
     }
     if (bar) bar.querySelectorAll('a').forEach(function (a) {
-      a.classList.toggle('st-on', a.pathname === location.pathname);
+      a.classList.toggle('st-on', a.pathname == location.pathname);
     });
   }
 
-  function add(bar, href, text) {
+  function addLink(bar, href, text) {
     var a = document.createElement('a');
     a.href = href;
     a.textContent = text;
     bar.appendChild(a);
   }
 
-  // البنرات (بالصفحة الرئيسية بس): المتحرك تحت الهيدر، وطرق الدفع فوق التقييمات
-  // عنوان قسم التقييمات: أكبر نص قصير فيه "تقييم/آراء/reviews" وحجمه حجم عنوان
-  // (18px أو أكثر)، عشان نص التقييم الصغير بكروت المنتجات ما ينحسب
+  /* ============ 2) البنرات (بالرئيسية بس) ============ */
+  // العلوي تحت الهيدر، وطرق الدفع فوق قسم التقييمات
+  function banners() {
+    var home = isHome();
+    var header = document.querySelector('header');
+    var top = document.getElementById('st-top');
+    var pay = document.getElementById('st-pay');
+
+    if (home && !top && header) {
+      top = makeBanner('st-top', TOP_IMG, 'eager');
+      (document.querySelector('.st-cats') || header).after(top);
+    }
+    if (home && !pay) {
+      var title = reviewsTitle();
+      if (title) rowOf(title).before(pay = makeBanner('st-pay', PAY_IMG, 'lazy'));
+    }
+    if (top) top.hidden = !home;
+    if (pay) pay.hidden = !home;
+  }
+
+  // عنوان قسم التقييمات: أكبر نص قصير ظاهر فيه كلمة تقييم/آراء/...
   function reviewsTitle() {
-    var best, size = 17;
+    var best, size = 17; // حجم عنوان (18px وأكثر)، عشان نص التقييم الصغير بالكروت ما ينحسب
     document.querySelectorAll('body *').forEach(function (e) {
-      var t = e.children.length ? '' : e.textContent.trim();
-      if (!t || t.length > 40 || !e.offsetWidth || !/تقييم|آراء|اراء|review/i.test(t) || e.closest('header, footer, .st-banner')) return;
-      var f = parseFloat(getComputedStyle(e).fontSize);
-      if (f > size) { size = f; best = e; }
+      var text = e.textContent.trim();
+      if (text.length > 40 || !e.offsetWidth || !REVIEWS.test(text) ||
+          e.closest('header, footer, a, button, .st-banner')) return;
+      var fs = parseFloat(getComputedStyle(e).fontSize);
+      if (fs > size) { size = fs; best = e; }
     });
     return best;
   }
 
-  function banners() {
-    var h = document.querySelector('header');
-    var top = document.getElementById('st-top'), pay = document.getElementById('st-pay');
-    var title = !pay && reviewsTitle();
-    // الرئيسية: "/" أو "/ar" أو "/en"، أو أي صفحة فيها قسم التقييمات
-    var home = /^\/(ar|en)?\/?$/.test(location.pathname) || !!title || !!pay;
-    if (home && !top && h) {
-      top = banner('st-top', TOP, 'eager');
-      (document.querySelector('.st-cats') || h).after(top);
-    }
-    if (title) {
-      // نطلع من العنوان لأول صف عريض، ونحط البنر قبله (فوق التقييمات)
-      var spot = title;
-      while (spot.parentElement != document.body && spot.offsetWidth < innerWidth * 0.5) spot = spot.parentElement;
-      spot.before(banner('st-pay', PAY, 'lazy'));
-    }
-    if (top) top.hidden = !home;
+  // أول صف عريض يحتوي العنوان (نحط البنر قبله)
+  function rowOf(e) {
+    while (e.parentElement != document.body && e.offsetWidth < innerWidth * 0.5) e = e.parentElement;
+    return e;
   }
 
-  // المنتج اللي لحاله بقسمه يجي بالنص (نعرف الكرت من زر "أضف للسلة")
-  function isCart(b) {
-    return /أضف للسلة|اضف للسلة|add to cart/i.test(b.textContent);
+  function makeBanner(id, file, loading) {
+    var box = document.createElement('div');
+    var img = document.createElement('img');
+    box.id = id;
+    box.className = 'st-banner';
+    img.alt = '';
+    img.loading = loading;
+    img.decoding = 'async';
+    img.onerror = function () { img.onerror = null; img.src = RAW + file; };
+    img.src = IMG + file;
+    box.appendChild(img);
+    return box;
   }
-  function lone() {
-    document.querySelectorAll('button, a').forEach(function (b) {
-      if (b.st || !b.offsetWidth || !isCart(b)) return;
-      b.st = 1;
-      // الكرت = أصغر عنصر فيه صورة المنتج والزر، وبعدها أغلفته اللي بنفس عرضه تقريباً
-      var card = b, list;
+
+  /* ====== 3) المنتج اللي لحاله بقسمه يجي بالنص ====== */
+  function centerLone() {
+    document.querySelectorAll('button, a').forEach(function (btn) {
+      if (btn.st || !btn.offsetWidth || !CART.test(btn.textContent)) return;
+      btn.st = 1;
+      // الكرت = أصغر عنصر فيه صورة المنتج والزر، ثم أغلفته اللي بنفس عرضه تقريباً
+      var card = btn, list;
       while (card.parentElement != document.body && !card.querySelector('img')) card = card.parentElement;
       while ((list = card.parentElement) != document.body && list.offsetWidth < card.offsetWidth * 1.2) card = list;
-      if (list == document.body || [].filter.call(list.querySelectorAll('button, a'), isCart).length != 1) return;
-      // نوسّط الكرت نفسه بس، بدون ما نغيّر ترتيب القسم
+      var carts = [].filter.call(list.querySelectorAll('button, a'), function (b) { return CART.test(b.textContent); });
+      if (list == document.body || carts.length != 1) return;
+      // نوسّط الكرت نفسه بس، ترتيب القسم ما يتغير
       card.style.cssText += ';width:' + card.offsetWidth + 'px;max-width:100%;flex:none;grid-column:1/-1;' +
         'margin-left:auto!important;margin-right:auto!important';
     });
   }
 
-  function banner(id, src, load) {
-    var d = document.createElement('div'), m;
-    d.id = id;
-    d.className = 'st-banner';
-    m = document.createElement('img');
-    m.alt = '';
-    m.loading = load;
-    m.decoding = 'async';
-    m.onerror = function () {
-      m.onerror = null;
-      m.src = src.replace(IMG, RAW);
-    };
-    m.src = src;
-    d.appendChild(m);
-    return d;
-  }
-
-  // أي طبقة بيضاء كبيرة تغطي الخلفية تصير شفافة (الكروت أصغر فما تتأثر)
-  function unwhite() {
-    document.querySelectorAll('body div, body section').forEach(function (el) {
-      if (el.st || el.closest('header, footer, [role=dialog]')) return;
-      var r = el.getBoundingClientRect();
+  /* ====== 4) الطبقات البيضاء الكبيرة اللي تغطي الخلفية ====== */
+  function clearWhite() {
+    document.querySelectorAll('body div, body section').forEach(function (e) {
+      if (e.st || e.closest('header, footer, [role=dialog]')) return;
+      var r = e.getBoundingClientRect();
       if (r.width < innerWidth * 0.6 || r.height < 150) return;
-      var c = getComputedStyle(el), v = c.backgroundColor.match(/[\d.]+/g);
-      if (c.position == 'fixed' || !v || v[0] < 235 || v[1] < 235 || v[2] < 235 || v[3] < 0.5) return;
-      el.st = 1;
-      el.style.setProperty('background-color', 'transparent', 'important');
+      var cs = getComputedStyle(e), c = cs.backgroundColor.match(/[\d.]+/g);
+      if (cs.position == 'fixed' || !c || c[0] < 235 || c[1] < 235 || c[2] < 235 || c[3] < 0.5) return;
+      e.st = 1;
+      e.style.setProperty('background-color', 'transparent', 'important');
     });
   }
 
-  function safe(f) {
-    try { f(); } catch (e) {}
+  /* ================= التشغيل ================= */
+  var tasks = [catBar, banners, centerLone, clearWhite];
+
+  function runAll() {
+    tasks.forEach(function (f) {
+      try { f(); } catch (e) {}
+    });
   }
 
   function start() {
-    [cats, banners, lone, unwhite].forEach(safe);
-    // أقسام رمز (مثل التقييمات) تحمّل متأخر: نعيد الفحص كل ثانيتين لمدة 20 ثانية
-    var n = 0, iv = setInterval(function () {
-      [banners, lone, unwhite].forEach(safe);
-      if (++n > 10) clearInterval(iv);
+    runAll();
+    // أقسام رمز تحمّل متأخر: نعيد كل ثانيتين لمدة 20 ثانية
+    var n = 0, timer = setInterval(function () {
+      runAll();
+      if (++n > 10) clearInterval(timer);
     }, 2000);
-    // المتجر يغيّر الصفحة بدون إعادة تحميل: نعيد الفحص (مرة كل نص ثانية بالكثير)
+    // تنقّل المتجر بدون إعادة تحميل: نعيد عند تغيّر الصفحة (مرة كل نص ثانية بالكثير)
     var busy = 0;
     new MutationObserver(function () {
-      if (busy) return;
-      busy = setTimeout(function () {
-        busy = 0;
-        [cats, banners, lone, unwhite].forEach(safe);
-      }, 500);
+      if (!busy) busy = setTimeout(function () { busy = 0; runAll(); }, 500);
     }).observe(document.body, { childList: true, subtree: true });
   }
 
