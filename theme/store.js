@@ -6,25 +6,6 @@
   var TOP = IMG + 'top-banner.webp';
   var PAY = IMG + 'payments.webp';
 
-  var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // شاشة الترحيب: مرة وحدة كل جلسة
-  function splash() {
-    try {
-      if (sessionStorage.st) return;
-      sessionStorage.st = 1;
-    } catch (e) { return; }
-    var s = document.createElement('div');
-    s.id = 'st-splash';
-    s.innerHTML = '<span></span>';
-    s.firstChild.textContent = document.title;
-    document.body.appendChild(s);
-    setTimeout(function () {
-      s.className = 'st-out';
-      setTimeout(function () { s.remove(); }, 700);
-    }, calm ? 200 : 1600);
-  }
-
   // شريط الأقسام تحت الهيدر، من روابط الأقسام الموجودة بالمتجر
   function cats() {
     var h = document.querySelector('header');
@@ -54,25 +35,55 @@
   }
 
   // البنرات (بالصفحة الرئيسية بس): المتحرك تحت الهيدر، وطرق الدفع فوق التقييمات
+  // عنوان قسم التقييمات: أكبر نص قصير فيه "تقييم/آراء/reviews" (مو تقييم كرت منتج)
+  function reviewsTitle() {
+    var best, size = 0;
+    document.querySelectorAll('body *').forEach(function (e) {
+      var t = e.children.length ? '' : e.textContent.trim();
+      if (!t || t.length > 40 || !/تقييم|آراء|اراء|review/i.test(t) || e.closest('header, footer, .st-banner')) return;
+      var f = parseFloat(getComputedStyle(e).fontSize);
+      if (f > size) { size = f; best = e; }
+    });
+    return best;
+  }
+
   function banners() {
     var h = document.querySelector('header');
-    var head = [].find.call(document.querySelectorAll('h1, h2, h3, h4'), function (e) {
-      return /تقييم|آراء|اراء|review/i.test(e.textContent) && !e.closest('header, footer');
-    });
-    // الرئيسية: "/" أو "/ar" أو "/en"، أو أي صفحة فيها قسم التقييمات
-    var home = /^\/(ar|en)?\/?$/.test(location.pathname) || !!head;
     var top = document.getElementById('st-top'), pay = document.getElementById('st-pay');
+    var title = !pay && reviewsTitle();
+    // الرئيسية: "/" أو "/ar" أو "/en"، أو أي صفحة فيها قسم التقييمات
+    var home = /^\/(ar|en)?\/?$/.test(location.pathname) || !!title || !!pay;
     if (home && !top && h) {
       top = banner('st-top', TOP, 'eager');
       (document.querySelector('.st-cats') || h).after(top);
     }
-    if (home && !pay) {
-      var spot = head ? head.closest('section') || head.parentElement : document.querySelector('footer');
-      if (spot) spot.before(pay = banner('st-pay', PAY, 'lazy'));
+    if (title) {
+      // نطلع من العنوان لأول صف عريض، ونحط البنر قبله (فوق التقييمات)
+      var spot = title;
+      while (spot.parentElement && spot.offsetWidth < innerWidth * 0.5) spot = spot.parentElement;
+      spot.before(banner('st-pay', PAY, 'lazy'));
     }
     if (top) top.hidden = !home;
-    if (pay) pay.hidden = !home;
   }
+
+  // المنتج اللي لحاله بقسمه يجي بالنص (نعرف الكرت من زر "أضف للسلة")
+  function isCart(b) {
+    return /أضف للسلة|اضف للسلة|add to cart/i.test(b.textContent);
+  }
+  function lone() {
+    document.querySelectorAll('button, a').forEach(function (b) {
+      if (b.st || !isCart(b)) return;
+      b.st = 1;
+      var card = b, list;
+      while ((list = card.parentElement) && list.offsetWidth < card.offsetWidth * 1.5) card = list;
+      if (!list || [].filter.call(list.querySelectorAll('button, a'), isCart).length != 1) return;
+      card.style.width = card.offsetWidth + 'px';
+      card.style.flex = 'none';
+      list.style.setProperty('display', 'flex', 'important');
+      list.style.setProperty('justify-content', 'center', 'important');
+    });
+  }
+
   function banner(id, src, load) {
     var d = document.createElement('div'), m;
     d.id = id;
@@ -113,17 +124,14 @@
   }
 
   function start() {
-    safe(splash);
-    [cats, banners, unwhite].forEach(safe);
-    console.log('[store-theme] v4', location.pathname,
-      'top:', !!document.getElementById('st-top'), 'pay:', !!document.getElementById('st-pay'));
+    [cats, banners, lone, unwhite].forEach(safe);
     // المتجر يغيّر الصفحة بدون إعادة تحميل: نعيد الفحص (مرة كل نص ثانية بالكثير)
     var busy = 0;
     new MutationObserver(function () {
       if (busy) return;
       busy = setTimeout(function () {
         busy = 0;
-        [cats, banners, unwhite].forEach(safe);
+        [cats, banners, lone, unwhite].forEach(safe);
       }, 500);
     }).observe(document.body, { childList: true, subtree: true });
   }
