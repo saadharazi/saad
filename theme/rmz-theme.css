@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+body {
+  --rmz-bg: #faf7f6;
+  --rmz-paper: #ffffff;
+  --rmz-maroon-950: #2a0812;
+  --rmz-maroon-800: #4a0f1e;
+  --rmz-maroon-600: #6e1b33;
+  --rmz-glow: rgba(210, 60, 100, 0.55); /* نفس توهج الشعار */
+  --rmz-ink: #201317;
+  --rmz-line: rgba(74, 15, 30, 0.09);
+  --rmz-shadow: rgba(42, 8, 18, 0.18);
+  --rmz-font-body: 'Cairo', sans-serif;
+  --rmz-font-num: 'Space Grotesk', sans-serif;
+  /* أرقام بدون وحدة، لأن الـ JS يكتبها بدون وحدة ونضربها بـ 1px تحت */
+  --px: 0; --py: 0;
+
+  background-color: var(--rmz-bg);
+  color: var(--rmz-ink);
+  font-family: var(--rmz-font-body);
+}
+
+/* ========== 1) نبضة التوهج — نفس روح الشعار بالـ GIF ========== */
+@keyframes rmz-breathe {
+  0%, 100% { filter: drop-shadow(0 0 0px var(--rmz-glow)); }
+  50%      { filter: drop-shadow(0 0 14px var(--rmz-glow)); }
+}
+
+.rmz-glow-el {
+  animation: rmz-breathe 4.5s ease-in-out infinite;
+}
+
+/* ========== 2) الشعار/البانر — عمق خفيف يتبع الماوس (بدون اهتزاز) ========== */
+header img, .rmz-header img, [class*="Header"] img,
+[class*="Banner"] img, [class*="banner"] img {
+  transition: transform .35s cubic-bezier(.2,.7,.2,1);
+  transform: translate(calc(var(--px) * 1px), calc(var(--py) * 1px));
+  will-change: transform;
+}
+
+/* ========== 3) شريط الكاتقوري — من روابطك الحقيقية ========== */
+.rmz-cat-bar {
+  display: flex;
+  gap: 8px;
+  padding: 14px 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.rmz-cat-bar::-webkit-scrollbar { display: none; }
+
+.rmz-cat-link {
+  position: relative;
+  border: 1px solid var(--rmz-line);
+  color: var(--rmz-ink);
+  text-decoration: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: .87rem;
+  white-space: nowrap;
+  transition: border-color .3s ease, color .3s ease, transform .25s ease;
+}
+
+.rmz-cat-link:hover { transform: translateY(-2px); }
+
+.rmz-cat-link.rmz-active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--rmz-maroon-800), var(--rmz-maroon-600));
+  border-color: transparent;
+  animation: rmz-breathe 4.5s ease-in-out infinite;
+}
+
+/* ========== 4) قسم الإحصائيات + التقييم — بآخر الصفحة ========== */
+.rmz-bottom-section {
+  order: 999; /* احتياطي لو الحاوية flex */
+  margin-top: 32px;
+  padding: 30px 18px;
+  border-top: 1px solid var(--rmz-line);
+  text-align: center;
+}
+
+.rmz-bottom-section .rmz-stat-num,
+.rmz-bottom-section [class*="counter"],
+.rmz-bottom-section h3 {
+  font-family: var(--rmz-font-num);
+  color: var(--rmz-maroon-800);
+}
+
+.rmz-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--rmz-line);
+  text-decoration: none;
+  color: var(--rmz-ink);
+  font-weight: 600;
+}
+.rmz-rating-badge:hover { border-color: var(--rmz-maroon-600); }
+
+/* ========== 5) شاشة الترحيب ========== */
+#rmz-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--rmz-bg);
+  transition: opacity .6s ease;
+}
+#rmz-splash.rmz-hide { opacity: 0; pointer-events: none; }
+
+#rmz-splash img, #rmz-splash .rmz-splash-text {
+  animation: rmz-breathe 3s ease-in-out infinite;
+}
+.rmz-splash-text {
+  font-family: var(--rmz-font-body);
+  font-weight: 800;
+  font-size: 1.6rem;
+  color: var(--rmz-maroon-800);
+  letter-spacing: .08em;
+}
+
+/* ========== 6) أزرار — رفع هادئ + توهج خفيف ========== */
+button, .btn, [class*="Button"] {
+  background: linear-gradient(135deg, var(--rmz-maroon-800), var(--rmz-maroon-600));
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+button:hover, .btn:hover, [class*="Button"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px var(--rmz-glow);
+}
+
+/* ============================================================
+   7) خلفية الموقع فقط — Topographic Lines بنفس ألوان الشعار
+   ============================================================ */
+#rmz-topo-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+body {
+  position: relative;
+  /* نقشة معينات خفيفة جداً خلف خطوط الكونتور، بنفس روح الصورة المرسلة */
+  background-image:
+    repeating-linear-gradient(45deg, rgba(74,15,30,0.035) 0, rgba(74,15,30,0.035) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(-45deg, rgba(74,15,30,0.035) 0, rgba(74,15,30,0.035) 1px, transparent 1px, transparent 26px);
+}
+
+/*
+  :where() يخلي الأولوية (specificity) صفر، فأي عنصر عنده position خاص
+  (هيدر ثابت، زر واتساب، سلة جانبية، شاشة الترحيب...) يحتفظ فيه.
+  النسخة القديمة كانت تحوّل كل هذي العناصر لـ relative وتخرّبها.
+*/
+:where(body > *:not(#rmz-topo-bg):not(#rmz-splash):not(script):not(style)) {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rmz-glow-el, .rmz-cat-link.rmz-active, #rmz-splash img, .rmz-splash-text {
+    animation: none !important;
+  }
+  header img, .rmz-header img, [class*="Header"] img,
+  [class*="Banner"] img, [class*="banner"] img { transform: none !important; }
+  #rmz-topo-bg { opacity: .85; }
+}
