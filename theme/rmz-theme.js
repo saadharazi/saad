@@ -51,8 +51,8 @@
       raf = requestAnimationFrame(function () {
         var px = (e.clientX / window.innerWidth - 0.5) * 10;
         var py = (e.clientY / window.innerHeight - 0.5) * 10;
-        document.body.style.setProperty('--px', px.toFixed(2));
-        document.body.style.setProperty('--py', py.toFixed(2));
+        document.body.style.setProperty('--st-px', px.toFixed(2));
+        document.body.style.setProperty('--st-py', py.toFixed(2));
         raf = null;
       });
     });
@@ -204,13 +204,14 @@
 
     // نفس لون الشعار (--rmz-maroon-600) بدرجة وردية باهتة مطابقة للصورة المرسلة
     var LINE_RGB = '110,27,51';
-    var LINE_COUNT = 22;
-    var NOISE_SCALE = 0.0022; // منحنيات أعرض وأنعم مثل الصورة
+    var LINE_COUNT = 34;        // عدد خطوط الكونتور (كل ما زاد صارت الخريطة أكثف)
+    var LEVEL_RANGE = 1.8;      // مدى قيم الضوضاء اللي نرسم عليها خطوط
+    var NOISE_SCALE = 0.0042;   // أكبر = تعرجات أكثر وأصغر
     var SPEED = prefersReduced ? 0 : 0.00009;
-    var OPACITY_MIN = 0.10;
-    var OPACITY_MAX = 0.30;
-    var LINE_WIDTH = 1.4;
-    var CELL = 10;          // حجم خلية الشبكة بالبكسل (الخطوط تبقى ناعمة بفضل الاستيفاء)
+    var OPACITY_MIN = 0.12;
+    var OPACITY_MAX = 0.32;
+    var LINE_WIDTH = 1.2;
+    var CELL = 8;           // حجم خلية الشبكة بالبكسل (الخطوط تبقى ناعمة بفضل الاستيفاء)
     var FRAME_MS = 1000 / 30; // الحركة بطيئة جداً، 30 إطار كافية وتوفر المعالج
 
     var cols, rows, field;
@@ -301,8 +302,10 @@
       ctx.lineWidth = LINE_WIDTH;
       ctx.lineCap = 'round';
       for (var k = 0; k < LINE_COUNT; k++) {
-        var level = (k / LINE_COUNT) * 2 - 1;
-        var opacity = OPACITY_MIN + (OPACITY_MAX - OPACITY_MIN) * (1 - Math.abs(level));
+        var level = ((k + 0.5) / LINE_COUNT * 2 - 1) * LEVEL_RANGE;
+        var opacity = OPACITY_MIN + (OPACITY_MAX - OPACITY_MIN) * (1 - Math.abs(level) / LEVEL_RANGE);
+        // كل خامس خط أغمق شوي، مثل الخرائط الطبوغرافية الحقيقية
+        if (k % 5 === 0) opacity = Math.min(opacity + 0.12, 0.45);
         ctx.strokeStyle = 'rgba(' + LINE_RGB + ',' + opacity.toFixed(3) + ')';
         ctx.beginPath();
         drawLevel(level);
