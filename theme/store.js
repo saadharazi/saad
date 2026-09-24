@@ -1,4 +1,9 @@
 (function () {
+  // روابط البنرات: تقدر تغيّرها لرابط صورة/GIF/فيديو (mp4 أو webm) من متجرك
+  var IMG = 'https://cdn.jsdelivr.net/gh/saadharazi/saad@9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
+  var TOP = IMG + 'top-banner.webp';
+  var PAY = IMG + 'payments.webp';
+
   var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // شاشة الترحيب: مرة وحدة كل جلسة
@@ -46,6 +51,42 @@
     bar.appendChild(a);
   }
 
+  // البنرات (بالصفحة الرئيسية بس): المتحرك تحت الهيدر، وطرق الدفع فوق التقييمات
+  function banners() {
+    var home = location.pathname == '/', h = document.querySelector('header');
+    var top = document.getElementById('st-top'), pay = document.getElementById('st-pay');
+    if (home && !top && h) {
+      top = banner('st-top', TOP, 'eager');
+      (document.querySelector('.st-cats') || h).after(top);
+    }
+    if (home && !pay) {
+      var head = [].find.call(document.querySelectorAll('h1, h2, h3, h4'), function (e) {
+        return /تقييم|آراء|اراء|review/i.test(e.textContent) && !e.closest('header, footer');
+      });
+      var spot = head ? head.closest('section') || head.parentElement : document.querySelector('footer');
+      if (spot) spot.before(pay = banner('st-pay', PAY, 'lazy'));
+    }
+    if (top) top.hidden = !home;
+    if (pay) pay.hidden = !home;
+  }
+  function banner(id, src, load) {
+    var d = document.createElement('div'), m;
+    d.id = id;
+    d.className = 'st-banner';
+    if (/\.(mp4|webm)$/i.test(src)) {
+      m = document.createElement('video');
+      m.autoplay = m.loop = m.muted = m.playsInline = true;
+    } else {
+      m = document.createElement('img');
+      m.alt = '';
+      m.loading = load;
+      m.decoding = 'async';
+    }
+    m.src = src;
+    d.appendChild(m);
+    return d;
+  }
+
   // الأرقام مثل "1,250+" تعدّ تصاعدياً لما تظهر (نفس النص، مكانه)
   function count() {
     if (calm) return;
@@ -91,14 +132,14 @@
 
   function start() {
     safe(splash);
-    [cats, count, unwhite].forEach(safe);
+    [cats, banners, count, unwhite].forEach(safe);
     // المتجر يغيّر الصفحة بدون إعادة تحميل: نعيد الفحص (مرة كل نص ثانية بالكثير)
     var busy = 0;
     new MutationObserver(function () {
       if (busy) return;
       busy = setTimeout(function () {
         busy = 0;
-        [cats, count, unwhite].forEach(safe);
+        [cats, banners, count, unwhite].forEach(safe);
       }, 500);
     }).observe(document.body, { childList: true, subtree: true });
   }

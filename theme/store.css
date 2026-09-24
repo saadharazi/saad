@@ -105,6 +105,55 @@ header {
   box-shadow: 0 0 18px var(--st-glow);
 }
 
+/* ---------- البنرات (يضيفها الـ JS) ----------
+   المتحرك تحت الهيدر، وطرق الدفع فوق التقييمات */
+.st-banner {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1280px;
+  margin: 22px auto;
+  padding: 0 16px;
+  animation: st-rise 0.8s ease both;
+}
+.st-banner[hidden] { display: none; }
+.st-banner img,
+.st-banner video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+  border: 1px solid var(--st-line);
+  box-shadow: 0 14px 40px rgba(42, 8, 18, 0.14);
+  background: var(--st-bar);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+.st-banner img:hover,
+.st-banner video:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 46px rgba(42, 8, 18, 0.2), 0 0 22px var(--st-glow);
+}
+/* البنر العلوي بنسبة عرض ثابتة عشان الصفحة ما تنط وهو يحمّل */
+#st-top img,
+#st-top video {
+  aspect-ratio: 59 / 33;
+  object-fit: cover;
+}
+#st-pay img { aspect-ratio: 1935 / 813; }
+/* البنر العلوي ما يتمدد أكثر من كذا بالكمبيوتر عشان يبقى حاد
+   (لو رفعت نسخة أكبر من الأصل، تقدر تكبّر الرقم) */
+#st-top { max-width: 1000px; }
+
+@keyframes st-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (max-width: 767px) {
+  .st-banner { margin: 14px auto; padding: 0 10px; }
+  .st-banner img, .st-banner video { border-radius: 14px; }
+}
+
 /* ---------- المنتجات بالنص ----------
    أقسام المنتجات سلايدر (Swiper) يصف المنتجات من اليسار. لو المنتجات
    أقل من اللي يعبّي الصف، نخليها بالنص. (لو السلايدر ممتلئ ما نلمسه
@@ -148,7 +197,7 @@ header {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .st-cats a.st-on, #st-splash span { animation: none; }
+  .st-cats a.st-on, #st-splash span, .st-banner { animation: none; }
 }
 
 /* ---------- صورة خطوط الكونتور (SVG) ---------- */
