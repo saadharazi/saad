@@ -163,6 +163,57 @@ header {
   .st-banner { width: calc(100% - 20px); margin: 14px auto; border-radius: 14px; }
 }
 
+/* ---------- الفوتر: كل شي بالنص ----------
+   الشعار، الوصف، أزرار التواصل، الأعمدة (المتجر / العميل)،
+   والشريط السفلي (طرق الدفع + الحقوق) كلها بالنص */
+footer,
+footer * {
+  text-align: center !important;
+}
+footer :is(div, ul, ol, nav, section, p) {
+  justify-content: center !important;
+}
+footer :is(ul, ol) {
+  padding-inline: 0 !important;
+  list-style: none;
+}
+/* الصور (الشعار وأيقونات الدفع) تتوسّط مع النص */
+footer img {
+  display: inline-block !important;
+  vertical-align: middle;
+}
+/* الخط القصير اللي تحت عناوين الأعمدة يصير بالنص (أي كان اسم الكلاس) */
+footer *::after,
+footer *::before {
+  left: 0 !important;
+  right: 0 !important;
+  margin-inline: auto !important;
+}
+/* مسافة بين الحقوق وأيقونات الدفع بالشريط السفلي */
+footer :is(p, span, small) {
+  margin-inline: 8px;
+}
+/* الترتيب: عمود الشعار والوصف والتواصل بصف كامل فوق،
+   وأعمدة الروابط (المتجر / العميل) تحته جنب بعض بالنص */
+footer .row > [class*="col"]:has(img) {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-bottom: 18px;
+}
+footer .row > [class*="col"]:has(ul):not(:has(img)) {
+  flex: 0 0 260px !important;
+  max-width: 260px !important;
+  width: 260px !important;
+}
+@media (max-width: 767px) {
+  footer .row > [class*="col"]:has(ul):not(:has(img)) {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+    width: 50% !important;
+  }
+}
+
 /* ---------- 5) نبضة التوهج ---------- */
 @keyframes st-breathe {
   0%, 100% { filter: drop-shadow(0 0 0 var(--st-glow)); }
