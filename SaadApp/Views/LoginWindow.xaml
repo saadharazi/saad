@@ -172,7 +172,7 @@
 
                         <!-- زر الدخول -->
                         <Button x:Name="LoginButton" Style="{StaticResource PrimaryButtonStyle}"
-                                IsDefault="True">
+                                IsDefault="True" Click="LoginButton_Click">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="دخول" VerticalAlignment="Center" />
                                 <TextBlock Text="&#xE72B;" FontFamily="{StaticResource IconFont}"

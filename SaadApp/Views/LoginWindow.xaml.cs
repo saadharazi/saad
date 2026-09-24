@@ -19,6 +19,13 @@ public partial class LoginWindow : Window
             DragMove();
     }
 
+    private void LoginButton_Click(object sender, RoutedEventArgs e)
+    {
+        // حالياً للتصميم فقط: ننتقل للشاشة الرئيسية بدون التحقق من الكود
+        new MainWindow().Show();
+        Close();
+    }
+
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
