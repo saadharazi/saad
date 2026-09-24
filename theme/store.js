@@ -1,6 +1,8 @@
 (function () {
   // روابط البنرات: تقدر تغيّرها لرابط صورة/GIF/فيديو (mp4 أو webm) من متجرك
   var IMG = 'https://cdn.jsdelivr.net/gh/saadharazi/saad@9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
+  // مصدر احتياطي لو jsDelivr ما حمّل
+  var RAW = 'https://raw.githubusercontent.com/saadharazi/saad/9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
   var TOP = IMG + 'top-banner.webp';
   var PAY = IMG + 'payments.webp';
 
@@ -53,16 +55,18 @@
 
   // البنرات (بالصفحة الرئيسية بس): المتحرك تحت الهيدر، وطرق الدفع فوق التقييمات
   function banners() {
-    var home = location.pathname == '/', h = document.querySelector('header');
+    var h = document.querySelector('header');
+    var head = [].find.call(document.querySelectorAll('h1, h2, h3, h4'), function (e) {
+      return /تقييم|آراء|اراء|review/i.test(e.textContent) && !e.closest('header, footer');
+    });
+    // الرئيسية: "/" أو "/ar" أو "/en"، أو أي صفحة فيها قسم التقييمات
+    var home = /^\/(ar|en)?\/?$/.test(location.pathname) || !!head;
     var top = document.getElementById('st-top'), pay = document.getElementById('st-pay');
     if (home && !top && h) {
       top = banner('st-top', TOP, 'eager');
       (document.querySelector('.st-cats') || h).after(top);
     }
     if (home && !pay) {
-      var head = [].find.call(document.querySelectorAll('h1, h2, h3, h4'), function (e) {
-        return /تقييم|آراء|اراء|review/i.test(e.textContent) && !e.closest('header, footer');
-      });
       var spot = head ? head.closest('section') || head.parentElement : document.querySelector('footer');
       if (spot) spot.before(pay = banner('st-pay', PAY, 'lazy'));
     }
@@ -82,35 +86,13 @@
       m.loading = load;
       m.decoding = 'async';
     }
+    m.onerror = function () {
+      m.onerror = null;
+      m.src = src.replace(IMG, RAW);
+    };
     m.src = src;
     d.appendChild(m);
     return d;
-  }
-
-  // الأرقام مثل "1,250+" تعدّ تصاعدياً لما تظهر (نفس النص، مكانه)
-  function count() {
-    if (calm) return;
-    var w = document.createTreeWalker(document.body, 4), t;
-    while ((t = w.nextNode())) {
-      if (t.st || !/^\s*[\d,]+\+\s*$/.test(t.data)) continue;
-      t.st = 1;
-      watch(t);
-    }
-  }
-  function watch(t) {
-    var end = t.data, max = +end.replace(/\D/g, '');
-    var io = new IntersectionObserver(function (e) {
-      if (!e[0].isIntersecting) return;
-      io.disconnect();
-      var t0;
-      requestAnimationFrame(function step(now) {
-        t0 = t0 || now;
-        var p = Math.min((now - t0) / 1200, 1);
-        t.data = p < 1 ? Math.floor(max * p).toLocaleString('en-US') + '+' : end;
-        if (p < 1) requestAnimationFrame(step);
-      });
-    }, { threshold: 0.4 });
-    io.observe(t.parentElement);
   }
 
   // أي طبقة بيضاء كبيرة تغطي الخلفية تصير شفافة (الكروت أصغر فما تتأثر)
@@ -132,14 +114,16 @@
 
   function start() {
     safe(splash);
-    [cats, banners, count, unwhite].forEach(safe);
+    [cats, banners, unwhite].forEach(safe);
+    console.log('[store-theme] v4', location.pathname,
+      'top:', !!document.getElementById('st-top'), 'pay:', !!document.getElementById('st-pay'));
     // المتجر يغيّر الصفحة بدون إعادة تحميل: نعيد الفحص (مرة كل نص ثانية بالكثير)
     var busy = 0;
     new MutationObserver(function () {
       if (busy) return;
       busy = setTimeout(function () {
         busy = 0;
-        [cats, banners, count, unwhite].forEach(safe);
+        [cats, banners, unwhite].forEach(safe);
       }, 500);
     }).observe(document.body, { childList: true, subtree: true });
   }
