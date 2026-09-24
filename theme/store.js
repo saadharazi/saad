@@ -1,5 +1,5 @@
 (function () {
-  // روابط البنرات: تقدر تغيّرها لرابط صورة/GIF/فيديو (mp4 أو webm) من متجرك
+  // روابط البنرات: تقدر تغيّرها لرابط صورة أو GIF من متجرك
   var IMG = 'https://cdn.jsdelivr.net/gh/saadharazi/saad@9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
   // مصدر احتياطي لو jsDelivr ما حمّل
   var RAW = 'https://raw.githubusercontent.com/saadharazi/saad/9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
@@ -35,12 +35,13 @@
   }
 
   // البنرات (بالصفحة الرئيسية بس): المتحرك تحت الهيدر، وطرق الدفع فوق التقييمات
-  // عنوان قسم التقييمات: أكبر نص قصير فيه "تقييم/آراء/reviews" (مو تقييم كرت منتج)
+  // عنوان قسم التقييمات: أكبر نص قصير فيه "تقييم/آراء/reviews" وحجمه حجم عنوان
+  // (18px أو أكثر)، عشان نص التقييم الصغير بكروت المنتجات ما ينحسب
   function reviewsTitle() {
-    var best, size = 0;
+    var best, size = 17;
     document.querySelectorAll('body *').forEach(function (e) {
       var t = e.children.length ? '' : e.textContent.trim();
-      if (!t || t.length > 40 || !/تقييم|آراء|اراء|review/i.test(t) || e.closest('header, footer, .st-banner')) return;
+      if (!t || t.length > 40 || !e.offsetWidth || !/تقييم|آراء|اراء|review/i.test(t) || e.closest('header, footer, .st-banner')) return;
       var f = parseFloat(getComputedStyle(e).fontSize);
       if (f > size) { size = f; best = e; }
     });
@@ -60,7 +61,7 @@
     if (title) {
       // نطلع من العنوان لأول صف عريض، ونحط البنر قبله (فوق التقييمات)
       var spot = title;
-      while (spot.parentElement && spot.offsetWidth < innerWidth * 0.5) spot = spot.parentElement;
+      while (spot.parentElement != document.body && spot.offsetWidth < innerWidth * 0.5) spot = spot.parentElement;
       spot.before(banner('st-pay', PAY, 'lazy'));
     }
     if (top) top.hidden = !home;
@@ -72,15 +73,16 @@
   }
   function lone() {
     document.querySelectorAll('button, a').forEach(function (b) {
-      if (b.st || !isCart(b)) return;
+      if (b.st || !b.offsetWidth || !isCart(b)) return;
       b.st = 1;
+      // الكرت = أصغر عنصر فيه صورة المنتج والزر، وبعدها أغلفته اللي بنفس عرضه تقريباً
       var card = b, list;
-      while ((list = card.parentElement) && list.offsetWidth < card.offsetWidth * 1.5) card = list;
-      if (!list || [].filter.call(list.querySelectorAll('button, a'), isCart).length != 1) return;
-      card.style.width = card.offsetWidth + 'px';
-      card.style.flex = 'none';
-      list.style.setProperty('display', 'flex', 'important');
-      list.style.setProperty('justify-content', 'center', 'important');
+      while (card.parentElement != document.body && !card.querySelector('img')) card = card.parentElement;
+      while ((list = card.parentElement) != document.body && list.offsetWidth < card.offsetWidth * 1.2) card = list;
+      if (list == document.body || [].filter.call(list.querySelectorAll('button, a'), isCart).length != 1) return;
+      // نوسّط الكرت نفسه بس، بدون ما نغيّر ترتيب القسم
+      card.style.cssText += ';width:' + card.offsetWidth + 'px;max-width:100%;flex:none;grid-column:1/-1;' +
+        'margin-left:auto!important;margin-right:auto!important';
     });
   }
 
@@ -88,15 +90,10 @@
     var d = document.createElement('div'), m;
     d.id = id;
     d.className = 'st-banner';
-    if (/\.(mp4|webm)$/i.test(src)) {
-      m = document.createElement('video');
-      m.autoplay = m.loop = m.muted = m.playsInline = true;
-    } else {
-      m = document.createElement('img');
-      m.alt = '';
-      m.loading = load;
-      m.decoding = 'async';
-    }
+    m = document.createElement('img');
+    m.alt = '';
+    m.loading = load;
+    m.decoding = 'async';
     m.onerror = function () {
       m.onerror = null;
       m.src = src.replace(IMG, RAW);
@@ -111,7 +108,7 @@
     document.querySelectorAll('body div, body section').forEach(function (el) {
       if (el.st || el.closest('header, footer, [role=dialog]')) return;
       var r = el.getBoundingClientRect();
-      if (r.width < innerWidth * 0.6 || r.height < 300) return;
+      if (r.width < innerWidth * 0.6 || r.height < 150) return;
       var c = getComputedStyle(el), v = c.backgroundColor.match(/[\d.]+/g);
       if (c.position == 'fixed' || !v || v[0] < 235 || v[1] < 235 || v[2] < 235 || v[3] < 0.5) return;
       el.st = 1;
@@ -125,6 +122,11 @@
 
   function start() {
     [cats, banners, lone, unwhite].forEach(safe);
+    // أقسام رمز (مثل التقييمات) تحمّل متأخر: نعيد الفحص كل ثانيتين لمدة 20 ثانية
+    var n = 0, iv = setInterval(function () {
+      [banners, lone, unwhite].forEach(safe);
+      if (++n > 10) clearInterval(iv);
+    }, 2000);
     // المتجر يغيّر الصفحة بدون إعادة تحميل: نعيد الفحص (مرة كل نص ثانية بالكثير)
     var busy = 0;
     new MutationObserver(function () {
