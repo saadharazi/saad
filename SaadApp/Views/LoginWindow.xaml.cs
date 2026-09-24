@@ -28,11 +28,4 @@ public partial class LoginWindow : Window
     {
         Close();
     }
-
-    private void PasswordInput_PasswordChanged(object sender, RoutedEventArgs e)
-    {
-        PasswordPlaceholder.Visibility = string.IsNullOrEmpty(PasswordInput.Password)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-    }
 }
