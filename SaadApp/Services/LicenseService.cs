@@ -82,13 +82,22 @@ public static partial class LicenseService
 
     public static bool IsValidKeyFormat(string key) => KeyPattern().IsMatch(key);
 
+    /// <summary>
+    /// ينظّف الكود المُدخل: يحذف المسافات من الأطراف والرموز المخفية التي تأتي مع النسخ واللصق
+    /// (علامات اتجاه النص العربي، والمسافات عديمة العرض). الأحرف العربية تبقى كما هي.
+    /// </summary>
+    public static string NormalizeKey(string key) => InvisibleChars().Replace(key.Replace('\u00A0', ' '), "").Trim();
+
+    /// <summary>مسار الكود في قاعدة البيانات (مع ترميز الأحرف العربية والخاصة داخل الرابط).</summary>
+    public static string UserPath(string key) => "users/" + Uri.EscapeDataString(key);
+
     private static async Task<LicenseResult> EvaluateAsync(string key, bool allowActivation, CancellationToken ct)
     {
-        key = key.Trim();
+        key = NormalizeKey(key);
         if (!IsValidKeyFormat(key))
             return new LicenseResult(LicenseStatus.InvalidFormat);
 
-        string path = $"users/{key}";
+        string path = UserPath(key);
 
         try
         {
@@ -245,7 +254,12 @@ public static partial class LicenseService
         };
     }
 
-    // مفاتيح Realtime Database لا تقبل . $ # [ ] / لذلك نسمح بالأحرف والأرقام و - _ فقط
-    [GeneratedRegex(@"^[A-Za-z0-9_\-]{1,64}$")]
+    // أحرف عربية أو إنجليزية أو أرقام (عربية أو إنجليزية) و - _ ومسافة داخلية.
+    // مفاتيح Realtime Database لا تقبل . $ # [ ] / أصلاً، فهي خارج القائمة.
+    [GeneratedRegex(@"^[\p{L}\p{Mn}\p{Nd}_\-]([\p{L}\p{Mn}\p{Nd}_\- ]{0,62}[\p{L}\p{Mn}\p{Nd}_\-])?$")]
     private static partial Regex KeyPattern();
+
+    // علامات الاتجاه (LRM/RLM/LRE...) والمسافات عديمة العرض وعلامة BOM
+    [GeneratedRegex(@"[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]")]
+    private static partial Regex InvisibleChars();
 }

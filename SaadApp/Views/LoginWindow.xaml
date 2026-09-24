@@ -151,7 +151,8 @@
                                          Style="{StaticResource InputTextBoxStyle}"
                                          FlowDirection="LeftToRight"
                                          FontFamily="{StaticResource MonoFont}" FontSize="15"
-                                         MaxLength="64" Tag="أدخل كود التفعيل" />
+                                         MaxLength="64" Tag="أدخل كود التفعيل"
+                                         TextChanged="AccessKeyTextBox_TextChanged" />
                                 <Button x:Name="PasteButton" Grid.Column="2" Content="لصق"
                                         Style="{StaticResource InlineButtonStyle}" ToolTip="لصق الكود"
                                         Click="PasteButton_Click" />

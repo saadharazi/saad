@@ -55,7 +55,7 @@ public sealed class LicenseMonitor : IDisposable
         {
             try
             {
-                await FirebaseClient.ListenAsync($"users/{License.Key}", () => ValidateAsync(ct), ct)
+                await FirebaseClient.ListenAsync(LicenseService.UserPath(License.Key), () => ValidateAsync(ct), ct)
                     .ConfigureAwait(false);
             }
             catch when (!ct.IsCancellationRequested)

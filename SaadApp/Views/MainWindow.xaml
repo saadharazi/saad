@@ -10,7 +10,7 @@
         ResizeMode="NoResize"
         FlowDirection="RightToLeft"
         FontFamily="{StaticResource MainFont}"
-        Loaded="Window_Loaded" Closed="Window_Closed">
+        Loaded="Window_Loaded" Closed="Window_Closed" KeyDown="Window_KeyDown">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
@@ -310,11 +310,11 @@
                                         <Border Style="{StaticResource SegmentedContainerStyle}" Padding="3"
                                                 HorizontalAlignment="Right" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal">
-                                                <RadioButton Content="ناعم" GroupName="Mode" Height="26"
+                                                <RadioButton x:Name="ModeSmoothRadio" Content="ناعم" GroupName="Mode" Height="26"
                                                              Style="{StaticResource SegmentedRadioStyle}" />
-                                                <RadioButton Content="متوازن" GroupName="Mode" Height="26" IsChecked="True"
+                                                <RadioButton x:Name="ModeBalancedRadio" Content="متوازن" GroupName="Mode" Height="26" IsChecked="True"
                                                              Style="{StaticResource SegmentedRadioStyle}" />
-                                                <RadioButton Content="قوي" GroupName="Mode" Height="26"
+                                                <RadioButton x:Name="ModeStrongRadio" Content="قوي" GroupName="Mode" Height="26"
                                                              Style="{StaticResource SegmentedRadioStyle}" />
                                             </StackPanel>
                                         </Border>
@@ -811,7 +811,7 @@
                                                    Margin="12,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Border Style="{StaticResource PillStyle}" HorizontalAlignment="Right" Padding="10,3">
-                                        <TextBlock Text="أداء عالي" FontSize="11" FontWeight="Bold"
+                                        <TextBlock x:Name="PerformanceLabel" Text="أداء عالي" FontSize="11" FontWeight="Bold"
                                                    Foreground="{StaticResource AccentBrush}" />
                                     </Border>
                                 </Grid>
@@ -819,7 +819,7 @@
                                 <UniformGrid Columns="3" Margin="0,14,0,0">
                                     <Border Style="{StaticResource StatTileStyle}" Margin="0,0,4,0">
                                         <StackPanel>
-                                            <TextBlock Style="{StaticResource StatValueStyle}" Text="3%" />
+                                            <TextBlock x:Name="CpuText" Style="{StaticResource StatValueStyle}" Text="0%" />
                                             <TextBlock Text="المعالج" Style="{StaticResource CardSubtitleStyle}"
                                                        HorizontalAlignment="Center" />
                                         </StackPanel>
@@ -827,7 +827,7 @@
                                     <Border Style="{StaticResource StatTileStyle}" Margin="4,0">
                                         <StackPanel>
                                             <TextBlock Style="{StaticResource StatValueStyle}">
-                                                <Run Text="48" /><Run Text=" MB" FontSize="11" FontWeight="SemiBold"
+                                                <Run x:Name="RamValue" Text="0" /><Run Text=" MB" FontSize="11" FontWeight="SemiBold"
                                                                       Foreground="{StaticResource TextSecondaryBrush}" />
                                             </TextBlock>
                                             <TextBlock Text="الذاكرة" Style="{StaticResource CardSubtitleStyle}"
@@ -837,19 +837,19 @@
                                     <Border Style="{StaticResource StatTileStyle}" Margin="4,0,0,0">
                                         <StackPanel>
                                             <TextBlock Style="{StaticResource StatValueStyle}">
-                                                <Run Text="1" /><Run Text=" ms" FontSize="11" FontWeight="SemiBold"
+                                                <Run x:Name="LatencyValue" Text="-" /><Run Text=" ms" FontSize="11" FontWeight="SemiBold"
                                                                      Foreground="{StaticResource TextSecondaryBrush}" />
                                             </TextBlock>
-                                            <TextBlock Text="التأخير" Style="{StaticResource CardSubtitleStyle}"
+                                            <TextBlock Text="الاتصال" Style="{StaticResource CardSubtitleStyle}"
                                                        HorizontalAlignment="Center" />
                                         </StackPanel>
                                     </Border>
                                 </UniformGrid>
 
-                                <!-- منحنى استقرار الأداء -->
+                                <!-- منحنى زمن الاتصال بالخادم (آخر القياسات) -->
                                 <Viewbox Stretch="Fill" Height="44" Margin="0,12,0,0">
                                     <Canvas Width="320" Height="46">
-                                        <Polygon Points="0,30 20,26 40,28 60,20 80,24 100,18 120,22 140,14 160,18 180,12 200,16 220,10 240,14 260,8 280,12 300,6 320,9 320,46 0,46">
+                                        <Polygon x:Name="LatencyArea" Points="0,46 320,46">
                                             <Polygon.Fill>
                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                                     <GradientStop Color="#59E0507A" Offset="0" />
@@ -857,7 +857,7 @@
                                                 </LinearGradientBrush>
                                             </Polygon.Fill>
                                         </Polygon>
-                                        <Polyline Points="0,30 20,26 40,28 60,20 80,24 100,18 120,22 140,14 160,18 180,12 200,16 220,10 240,14 260,8 280,12 300,6 320,9"
+                                        <Polyline x:Name="LatencyLine" Points="0,40 320,40"
                                                   Stroke="{StaticResource AccentBrush}" StrokeThickness="2"
                                                   StrokeLineJoin="Round" Effect="{StaticResource AccentGlow}" />
                                     </Canvas>

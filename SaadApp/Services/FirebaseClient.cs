@@ -18,6 +18,9 @@ public static class FirebaseClient
     // اتصال البث المباشر يبقى مفتوحاً، فلا نحدد له مهلة
     private static readonly HttpClient StreamHttp = new() { Timeout = Timeout.InfiniteTimeSpan };
 
+    /// <summary>آخر زمن استجابة من الخادم بالمللي ثانية (null = لم يُقَس بعد).</summary>
+    public static int? LastLatencyMs { get; private set; }
+
     public static string BuildUrl(string path) => $"{AppConfig.DatabaseUrl.TrimEnd('/')}/{path}.json";
 
     /// <summary>يقرأ عقدة. يرجع null إذا كانت غير موجودة.</summary>
@@ -49,7 +52,9 @@ public static class FirebaseClient
         {
             string? token = await FirebaseAuth.GetTokenAsync(ct).ConfigureAwait(false);
             using var request = createRequest(BuildAuthUrl(path, token));
+            long started = System.Diagnostics.Stopwatch.GetTimestamp();
             using var response = await Http.SendAsync(request, ct).ConfigureAwait(false);
+            LastLatencyMs = (int)System.Diagnostics.Stopwatch.GetElapsedTime(started).TotalMilliseconds;
             ServerClock.Update(response.Headers.Date);
 
             if (token is not null && attempt == 0 && response.StatusCode == HttpStatusCode.Unauthorized)

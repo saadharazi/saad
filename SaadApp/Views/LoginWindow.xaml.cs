@@ -87,7 +87,7 @@ public partial class LoginWindow : Window
 
     private async void LoginButton_Click(object sender, RoutedEventArgs e)
     {
-        string key = AccessKeyTextBox.Text.Trim();
+        string key = LicenseService.NormalizeKey(AccessKeyTextBox.Text);
         if (key.Length == 0)
         {
             ShowError("أدخل كود التفعيل");
@@ -137,13 +137,27 @@ public partial class LoginWindow : Window
         Close();
     }
 
+    /// <summary>
+    /// الكود العربي يُعرض من اليمين لليسار بخط عادي، والإنجليزي من اليسار لليمين بخط ثابت العرض.
+    /// </summary>
+    private void AccessKeyTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        bool arabic = AccessKeyTextBox.Text.Any(c => c is >= '\u0600' and <= '\u06FF');
+        var direction = arabic ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+        if (AccessKeyTextBox.FlowDirection != direction)
+        {
+            AccessKeyTextBox.FlowDirection = direction;
+            AccessKeyTextBox.FontFamily = (FontFamily)FindResource(arabic ? "MainFont" : "MonoFont");
+        }
+    }
+
     private void PasteButton_Click(object sender, RoutedEventArgs e)
     {
         try
         {
             if (Clipboard.ContainsText())
             {
-                AccessKeyTextBox.Text = Clipboard.GetText().Trim();
+                AccessKeyTextBox.Text = LicenseService.NormalizeKey(Clipboard.GetText());
                 AccessKeyTextBox.CaretIndex = AccessKeyTextBox.Text.Length;
                 AccessKeyTextBox.Focus();
             }
