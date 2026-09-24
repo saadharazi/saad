@@ -12,6 +12,12 @@ public static class AppConfig
     public const string DatabaseUrl = "https://boost-72544-default-rtdb.firebaseio.com";
 
     /// <summary>
+    /// Web API Key (من إعدادات المشروع في Firebase). يُستخدم لتسجيل دخول مجهول (Anonymous)
+    /// حتى تعمل قواعد قاعدة البيانات التي تشترط auth != null. هذا المفتاح عام وليس سرياً.
+    /// </summary>
+    public const string ApiKey = "AIzaSyB7XXgcsV_GM9dG61_NINDHLL1Jod7c578";
+
+    /// <summary>
     /// رقم إصدار هذه النسخة. عند رفع نسخة جديدة: زِد هذا الرقم، ثم حدّث "Update number" في قاعدة البيانات.
     /// </summary>
     public const double CurrentVersion = 20.2;

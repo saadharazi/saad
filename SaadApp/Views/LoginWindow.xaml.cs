@@ -62,10 +62,13 @@ public partial class LoginWindow : Window
             update = await UpdateService.CheckAsync();
             SetServerStatus(true);
         }
-        catch
+        catch (Exception ex)
         {
             SetServerStatus(false);
             SetBusy(false);
+            ShowError(ex is FirebaseException { IsPermissionDenied: true } fe
+                ? $"قاعدة البيانات رفضت الاتصال، تحقق من قواعد الحماية (Rules) ({fe.ShortDescription})"
+                : $"تعذّر الاتصال بالخادم ({LicenseService.DescribeError(ex)})");
             return;
         }
 

@@ -27,17 +27,21 @@ public enum LicenseStatus
     OtherDevice,
     Expired,
     ActivationDenied,
+    AccessDenied,
     NetworkError,
 }
 
-public sealed record LicenseResult(LicenseStatus Status, LicenseInfo? License = null)
+public sealed record LicenseResult(LicenseStatus Status, LicenseInfo? License = null, string? Detail = null)
 {
     public bool IsValid => Status == LicenseStatus.Valid;
 
     /// <summary>خطأ اتصال مؤقت (ليس رفضاً من الخادم).</summary>
-    public bool IsNetworkError => Status == LicenseStatus.NetworkError;
+    public bool IsNetworkError => Status is LicenseStatus.NetworkError or LicenseStatus.AccessDenied;
 
-    public string Message => Status switch
+    /// <summary>الرسالة مع تفاصيل تقنية (رمز الخطأ) إن وُجدت.</summary>
+    public string Message => Detail is null ? BaseMessage : $"{BaseMessage} ({Detail})";
+
+    private string BaseMessage => Status switch
     {
         LicenseStatus.Valid => "",
         LicenseStatus.InvalidFormat => "صيغة الكود غير صحيحة",
@@ -47,6 +51,7 @@ public sealed record LicenseResult(LicenseStatus Status, LicenseInfo? License = 
         LicenseStatus.OtherDevice => "هذا الكود مفعّل على جهاز آخر",
         LicenseStatus.Expired => "انتهت صلاحية هذا الكود",
         LicenseStatus.ActivationDenied => "تعذّر تفعيل الكود، تواصل مع الدعم الفني",
+        LicenseStatus.AccessDenied => "قاعدة البيانات رفضت الاتصال، تحقق من قواعد الحماية (Rules)",
         LicenseStatus.NetworkError => "تعذّر الاتصال بالخادم، تحقق من الإنترنت",
         _ => "خطأ غير معروف",
     };
@@ -132,14 +137,14 @@ public static partial class LicenseService
         }
         catch (FirebaseException ex) when (ex.IsPermissionDenied)
         {
-            return new LicenseResult(LicenseStatus.NotFound);
+            return new LicenseResult(LicenseStatus.AccessDenied, Detail: ex.ShortDescription);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or FirebaseException
                                        or JsonException)
         {
             if (ct.IsCancellationRequested)
                 throw;
-            return new LicenseResult(LicenseStatus.NetworkError);
+            return new LicenseResult(LicenseStatus.NetworkError, Detail: DescribeError(ex));
         }
     }
 
@@ -186,6 +191,15 @@ public static partial class LicenseService
 
         return null;
     }
+
+    /// <summary>وصف مختصر للخطأ يظهر للمستخدم للمساعدة في التشخيص.</summary>
+    public static string DescribeError(Exception ex) => ex switch
+    {
+        FirebaseException fe => fe.ShortDescription,
+        TaskCanceledException => "انتهت مهلة الاتصال",
+        HttpRequestException { InnerException: { } inner } => inner.Message,
+        _ => ex.Message,
+    };
 
     internal static string ReadString(JsonElement obj, string name) =>
         obj.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
