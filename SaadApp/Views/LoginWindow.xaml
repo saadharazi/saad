@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="BOOST STORE - تسجيل الدخول"
-        Width="920" Height="580"
+        SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -11,180 +11,345 @@
         FlowDirection="RightToLeft"
         FontFamily="{StaticResource MainFont}">
 
-    <Border Background="{StaticResource WindowBackgroundBrush}"
+    <Border Width="940" Height="580" Margin="14"
+            Background="{StaticResource WindowBackgroundBrush}"
             BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
             CornerRadius="16"
-            Margin="12"
             MouseLeftButtonDown="Window_MouseLeftButtonDown">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.6" Color="Black" />
+            <DropShadowEffect BlurRadius="24" ShadowDepth="0" Opacity="0.7" Color="Black" />
         </Border.Effect>
 
+        <!-- القص على شكل الزوايا الدائرية (938 × 578 = الحجم الداخلي) -->
         <Grid>
-            <Grid.ColumnDefinitions>
-                <!-- مع RightToLeft يظهر العمود الأول على اليمين -->
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="400" />
-            </Grid.ColumnDefinitions>
+            <Grid.Clip>
+                <RectangleGeometry Rect="0,0,938,578" RadiusX="15" RadiusY="15" />
+            </Grid.Clip>
 
-            <!-- ===================== نموذج الدخول بالكود ===================== -->
-            <Grid Grid.Column="0">
+            <!-- حركة دوران الحلقة الخارجية ونبض الحلقة الداخلية -->
+            <Grid.Triggers>
+                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="OuterRingRotate"
+                                             Storyboard.TargetProperty="Angle"
+                                             From="0" To="360" Duration="0:0:30"
+                                             RepeatBehavior="Forever" />
+                            <DoubleAnimation Storyboard.TargetName="InnerRing"
+                                             Storyboard.TargetProperty="Opacity"
+                                             From="1" To="0.45" Duration="0:0:1.6"
+                                             AutoReverse="True" RepeatBehavior="Forever" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Grid.Triggers>
+
+            <!-- ===================== طبقات الخلفية ===================== -->
+            <!-- شبكة خفيفة تتلاشى نحو اليمين -->
+            <Rectangle Fill="{StaticResource GridPatternBrush}">
+                <Rectangle.OpacityMask>
+                    <!-- الإحداثيات منعكسة بسبب RightToLeft: 0.77 = يسار الشاشة -->
+                    <RadialGradientBrush Center="0.77,0.5" GradientOrigin="0.77,0.5"
+                                         RadiusX="0.6" RadiusY="0.9">
+                        <GradientStop Color="Black" Offset="0" />
+                        <GradientStop Color="Transparent" Offset="1" />
+                    </RadialGradientBrush>
+                </Rectangle.OpacityMask>
+            </Rectangle>
+
+            <!-- توهج عنابي خلف علامة التصويب -->
+            <Ellipse Width="360" Height="360" Fill="#8B1E3F" Opacity="0.45"
+                     HorizontalAlignment="Right" VerticalAlignment="Center"
+                     Margin="0,0,40,60" IsHitTestVisible="False">
+                <Ellipse.Effect>
+                    <BlurEffect Radius="140" />
+                </Ellipse.Effect>
+            </Ellipse>
+
+            <!-- توهج خفيف في الزاوية العلوية -->
+            <Ellipse Width="220" Height="220" Fill="#8B1E3F" Opacity="0.18"
+                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Margin="-60,-80,0,0" IsHitTestVisible="False">
+                <Ellipse.Effect>
+                    <BlurEffect Radius="100" />
+                </Ellipse.Effect>
+            </Ellipse>
+
+            <!-- ===================== المحتوى ===================== -->
+            <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="50" />
                     <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <!-- مع RightToLeft يظهر العمود الأول على اليمين -->
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="430" />
+                </Grid.ColumnDefinitions>
 
-                <!-- شريط العنوان (إغلاق / تصغير) - يظهر في الزاوية العلوية اليمنى -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal"
-                            HorizontalAlignment="Left" Margin="10">
-                    <Button x:Name="CloseButton" Content="&#xE8BB;"
-                            Style="{StaticResource CloseButtonStyle}"
-                            Click="CloseButton_Click" ToolTip="إغلاق" />
-                    <Button x:Name="MinimizeButton" Content="&#xE921;"
-                            Style="{StaticResource TitleBarButtonStyle}"
-                            Click="MinimizeButton_Click" ToolTip="تصغير" Margin="4,0,0,0" />
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Width="340" VerticalAlignment="Center">
-
-                    <TextBlock Text="تسجيل الدخول"
-                               FontSize="28" FontWeight="Bold"
-                               Foreground="{StaticResource TextPrimaryBrush}" />
-                    <TextBlock Text="أدخل كود التفعيل الخاص بك للدخول إلى التطبيق"
-                               FontSize="14" Margin="0,6,0,32" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
-
-                    <!-- كود الدخول -->
-                    <TextBlock Text="كود الدخول" FontSize="13" Margin="0,0,0,8"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
-                    <Border Style="{StaticResource InputContainerStyle}" Height="52">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="&#xE8D7;" Style="{StaticResource InputIconStyle}"
-                                       Foreground="{StaticResource AccentBrush}" />
-                            <!-- الكود بالأحرف الإنجليزية فيُكتب من اليسار لليمين -->
-                            <TextBox x:Name="AccessKeyTextBox" Grid.Column="1" Margin="12,0"
-                                     Style="{StaticResource InputTextBoxStyle}"
-                                     FlowDirection="LeftToRight"
-                                     FontFamily="Consolas" FontSize="15"
-                                     CharacterCasing="Upper" MaxLength="32"
-                                     Tag="XXXX-XXXX-XXXX-XXXX" />
-                            <Button x:Name="PasteButton" Grid.Column="2" Content="&#xE77F;"
-                                    Style="{StaticResource TitleBarButtonStyle}"
-                                    FontSize="14" Width="34" Height="34"
-                                    ToolTip="لصق الكود" />
-                        </Grid>
-                    </Border>
-
-                    <!-- تذكر الكود -->
-                    <CheckBox x:Name="RememberKeyCheckBox" Content="تذكر الكود على هذا الجهاز"
-                              Style="{StaticResource CheckBoxStyle}"
-                              HorizontalAlignment="Left" Margin="0,16,0,28" />
-
-                    <!-- زر الدخول -->
-                    <Button x:Name="LoginButton" Style="{StaticResource PrimaryButtonStyle}"
-                            IsDefault="True">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="دخول" VerticalAlignment="Center" />
-                            <TextBlock Text="&#xE72B;" FontFamily="{StaticResource IconFont}"
-                                       FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-
-                    <!-- رسالة خطأ (مخفية حالياً - للتصميم فقط) -->
-                    <Border x:Name="ErrorMessageBorder" Margin="0,16,0,0"
-                            Background="#338B1E3F" BorderBrush="#668B1E3F" BorderThickness="1"
-                            CornerRadius="8" Padding="12,8"
-                            Visibility="Collapsed">
-                        <TextBlock x:Name="ErrorMessageText"
-                                   Text="الكود غير صحيح أو منتهي الصلاحية"
-                                   Foreground="#FF6B8B" FontSize="13" TextWrapping="Wrap" />
-                    </Border>
-
-                    <!-- شراء كود -->
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
-                        <TextBlock Text="ما عندك كود؟" FontSize="13"
-                                   Foreground="{StaticResource TextSecondaryBrush}" />
-                        <Button x:Name="BuyKeyButton" Content="اشترِ من المتجر"
-                                Style="{StaticResource LinkButtonStyle}" Margin="6,0,0,0" />
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- التذييل: حالة الخادم + الإصدار -->
-                <Grid Grid.Row="2" Margin="24,0,24,16">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <Ellipse Width="8" Height="8" Fill="#2ECC71" VerticalAlignment="Center" />
-                        <TextBlock x:Name="ServerStatusText" Text="الخادم متصل" FontSize="11"
-                                   Margin="6,0,0,0" Foreground="{StaticResource TextMutedBrush}" />
-                    </StackPanel>
-                    <TextBlock x:Name="VersionText" Text="v1.0.0" FontSize="11"
-                               HorizontalAlignment="Right"
-                               Foreground="{StaticResource TextMutedBrush}" />
-                </Grid>
-            </Grid>
-
-            <!-- ===================== اللوحة الجانبية (هوية BOOST STORE) ===================== -->
-            <!-- CornerRadius منعكس بسبب RightToLeft: الزوايا المدوّرة تظهر على اليسار -->
-            <Border Grid.Column="1" CornerRadius="0,16,16,0"
-                    Background="{StaticResource BrandGradientBrush}">
-                <Grid ClipToBounds="True">
-                    <!-- دوائر زخرفية -->
-                    <Ellipse Width="280" Height="280" Opacity="0.35"
-                             Stroke="{StaticResource AccentBrush}" StrokeThickness="1"
-                             HorizontalAlignment="Right" VerticalAlignment="Top"
-                             Margin="0,-110,-110,0" />
-                    <Ellipse Width="200" Height="200" Fill="#8B1E3F" Opacity="0.25"
-                             HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                             Margin="-70,0,0,-60" />
-
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="32">
-                        <!-- الشعار -->
-                        <Border Width="96" Height="96" CornerRadius="24"
-                                Background="#1AFFFFFF" BorderBrush="#66D6456E" BorderThickness="1.5"
-                                HorizontalAlignment="Center">
-                            <TextBlock Text="B" FontSize="52" FontWeight="Black" Foreground="White"
+                <!-- ============ شريط العنوان ============ -->
+                <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="18,0,12,0">
+                    <!-- الشعار واسم المتجر (يمين) -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <Border Width="28" Height="28" CornerRadius="8"
+                                Background="{StaticResource PrimaryButtonBrush}">
+                            <TextBlock Text="B" FontSize="15" FontWeight="Black" Foreground="White"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
+                        <TextBlock Text="BOOST STORE" FontSize="13" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" Margin="10,0,0,0" />
+                    </StackPanel>
 
-                        <TextBlock Text="BOOST STORE" FontSize="30" FontWeight="Black"
-                                   Foreground="White" HorizontalAlignment="Center"
-                                   Margin="0,24,0,4" />
-                        <TextBlock Text="AIM ASSIST" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{StaticResource AccentBrush}"
-                                   HorizontalAlignment="Center" Margin="0,0,0,32" />
-
-                        <!-- المميزات -->
-                        <StackPanel HorizontalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                                <TextBlock Text="&#xE945;" FontFamily="{StaticResource IconFont}"
-                                           FontSize="15" Foreground="{StaticResource AccentBrush}"
-                                           VerticalAlignment="Center" />
-                                <TextBlock Text="تفعيل فوري بالكود" FontSize="14" Foreground="White"
-                                           Margin="12,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                                <TextBlock Text="&#xE895;" FontFamily="{StaticResource IconFont}"
-                                           FontSize="15" Foreground="{StaticResource AccentBrush}"
-                                           VerticalAlignment="Center" />
-                                <TextBlock Text="تحديثات تلقائية" FontSize="14" Foreground="White"
-                                           Margin="12,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8F2;" FontFamily="{StaticResource IconFont}"
-                                           FontSize="15" Foreground="{StaticResource AccentBrush}"
-                                           VerticalAlignment="Center" />
-                                <TextBlock Text="دعم فني متواصل" FontSize="14" Foreground="White"
-                                           Margin="12,0,0,0" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </StackPanel>
+                    <!-- أزرار التحكم (يسار) -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="MinimizeButton" Content="&#xE921;"
+                                Style="{StaticResource TitleBarButtonStyle}"
+                                Click="MinimizeButton_Click" ToolTip="تصغير" />
+                        <Button x:Name="CloseButton" Content="&#xE8BB;"
+                                Style="{StaticResource CloseButtonStyle}"
+                                Click="CloseButton_Click" ToolTip="إغلاق" Margin="4,0,0,0" />
                     </StackPanel>
                 </Grid>
-            </Border>
+
+                <!-- ============ نموذج الدخول (يمين) ============ -->
+                <Grid Grid.Row="1" Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Width="340" VerticalAlignment="Center">
+
+                        <!-- شارة المنتج -->
+                        <Border Style="{StaticResource PillStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}"
+                                         VerticalAlignment="Center" />
+                                <TextBlock Text="AIM ASSIST" FontSize="11" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="مرحباً بك" Margin="0,14,0,0"
+                                   FontSize="30" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="أدخل كود التفعيل الخاص بك للبدء"
+                                   FontSize="14" Margin="0,6,0,24"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+
+                        <!-- كود التفعيل -->
+                        <TextBlock Text="كود التفعيل" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                        <Border Style="{StaticResource InputContainerStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="&#xE8D7;" Style="{StaticResource InputIconStyle}"
+                                           Foreground="{StaticResource AccentBrush}" />
+                                <!-- الكود بالأحرف الإنجليزية فيُكتب من اليسار لليمين -->
+                                <TextBox x:Name="AccessKeyTextBox" Grid.Column="1" Margin="12,0"
+                                         Style="{StaticResource InputTextBoxStyle}"
+                                         FlowDirection="LeftToRight"
+                                         FontFamily="Consolas" FontSize="15"
+                                         CharacterCasing="Upper" MaxLength="32"
+                                         Tag="XXXX-XXXX-XXXX-XXXX" />
+                                <Button x:Name="PasteButton" Grid.Column="2" Content="&#xE77F;"
+                                        Style="{StaticResource TitleBarButtonStyle}"
+                                        FontSize="14" Width="34" Height="34"
+                                        ToolTip="لصق الكود" />
+                            </Grid>
+                        </Border>
+
+                        <!-- تذكر الكود -->
+                        <CheckBox x:Name="RememberKeyCheckBox" Content="تذكر الكود على هذا الجهاز"
+                                  Style="{StaticResource CheckBoxStyle}"
+                                  HorizontalAlignment="Left" Margin="0,14,0,22" />
+
+                        <!-- زر الدخول -->
+                        <Button x:Name="LoginButton" Style="{StaticResource PrimaryButtonStyle}"
+                                IsDefault="True">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="دخول" VerticalAlignment="Center" />
+                                <TextBlock Text="&#xE72B;" FontFamily="{StaticResource IconFont}"
+                                           FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- رسالة خطأ (مخفية حالياً - للتصميم فقط) -->
+                        <Border x:Name="ErrorMessageBorder" Margin="0,14,0,0"
+                                Background="#338B1E3F" BorderBrush="#668B1E3F" BorderThickness="1"
+                                CornerRadius="10" Padding="12,9"
+                                Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE783;" FontFamily="{StaticResource IconFont}"
+                                           Foreground="#FF6B8B" FontSize="14" VerticalAlignment="Center" />
+                                <TextBlock x:Name="ErrorMessageText"
+                                           Text="الكود غير صحيح أو منتهي الصلاحية"
+                                           Foreground="#FF6B8B" FontSize="13" Margin="8,0,0,0"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- فاصل "أو" -->
+                        <Grid Margin="0,20,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Rectangle Height="1" Fill="{StaticResource BorderBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="أو" FontSize="12" Margin="12,0"
+                                       Foreground="{StaticResource TextMutedBrush}" />
+                            <Rectangle Grid.Column="2" Height="1" Fill="{StaticResource BorderBrush}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+
+                        <!-- المتجر / الدعم الفني -->
+                        <UniformGrid Columns="2">
+                            <Button x:Name="StoreButton" Style="{StaticResource SecondaryButtonStyle}"
+                                    Margin="0,0,6,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE719;" FontFamily="{StaticResource IconFont}"
+                                               FontSize="14" Foreground="{StaticResource AccentBrush}"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="شراء كود" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="SupportButton" Style="{StaticResource SecondaryButtonStyle}"
+                                    Margin="6,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8BD;" FontFamily="{StaticResource IconFont}"
+                                               FontSize="14" Foreground="{StaticResource AccentBrush}"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="الدعم الفني" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <!-- التذييل: حالة الخادم + الإصدار -->
+                    <Grid Grid.Row="1" Width="340" Margin="0,0,0,18">
+                        <Border Background="#142ECC71" CornerRadius="20" Padding="10,4"
+                                HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="#2ECC71" VerticalAlignment="Center" />
+                                <TextBlock x:Name="ServerStatusText" Text="الخادم متصل" FontSize="11"
+                                           Margin="6,0,0,0" Foreground="#7FD8A0" />
+                            </StackPanel>
+                        </Border>
+                        <TextBlock x:Name="VersionText" Text="v1.0.0" FontSize="11"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextMutedBrush}" />
+                    </Grid>
+                </Grid>
+
+                <!-- خط فاصل بين القسمين -->
+                <Rectangle Grid.Row="1" Grid.Column="1" Width="1" HorizontalAlignment="Left"
+                           Margin="0,20,0,40">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="Transparent" Offset="0" />
+                            <GradientStop Color="#442A2A30" Offset="0.2" />
+                            <GradientStop Color="#FF2A2A30" Offset="0.5" />
+                            <GradientStop Color="#442A2A30" Offset="0.8" />
+                            <GradientStop Color="Transparent" Offset="1" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <!-- ============ لوحة الهوية + علامة التصويب (يسار) ============ -->
+                <StackPanel Grid.Row="1" Grid.Column="1"
+                            VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Margin="0,0,0,30">
+
+                    <!-- علامة التصويب (Crosshair) -->
+                    <Grid Width="260" Height="260">
+                        <!-- زوايا إطار HUD -->
+                        <Path Data="M0,34 L0,0 L34,0 M226,0 L260,0 L260,34 M260,226 L260,260 L226,260 M34,260 L0,260 L0,226"
+                              Stroke="#668B1E3F" StrokeThickness="2" />
+
+                        <!-- الحلقة الخارجية (تدور) -->
+                        <Ellipse Width="236" Height="236"
+                                 Stroke="{StaticResource AccentBrush}" StrokeThickness="1.5"
+                                 StrokeDashArray="2 6" Opacity="0.7"
+                                 RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <RotateTransform x:Name="OuterRingRotate" Angle="0" />
+                            </Ellipse.RenderTransform>
+                        </Ellipse>
+
+                        <!-- الحلقة الوسطى -->
+                        <Ellipse Width="180" Height="180" Stroke="#26FFFFFF" StrokeThickness="1" />
+
+                        <!-- الحلقة الداخلية (تنبض) -->
+                        <Ellipse x:Name="InnerRing" Width="110" Height="110"
+                                 Stroke="{StaticResource AccentBrush}" StrokeThickness="2">
+                            <Ellipse.Effect>
+                                <DropShadowEffect Color="#D6456E" BlurRadius="18" ShadowDepth="0" Opacity="0.9" />
+                            </Ellipse.Effect>
+                        </Ellipse>
+
+                        <!-- خطوط التصويب -->
+                        <Path Data="M130,30 L130,98 M130,162 L130,230 M30,130 L98,130 M162,130 L230,130"
+                              Stroke="White" StrokeThickness="2" Opacity="0.85"
+                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+
+                        <!-- النقطة المركزية -->
+                        <Ellipse Width="10" Height="10" Fill="{StaticResource AccentBrush}">
+                            <Ellipse.Effect>
+                                <DropShadowEffect Color="#D6456E" BlurRadius="14" ShadowDepth="0" Opacity="1" />
+                            </Ellipse.Effect>
+                        </Ellipse>
+                    </Grid>
+
+                    <TextBlock Text="BOOST STORE" FontSize="30" FontWeight="Black"
+                               Foreground="White" HorizontalAlignment="Center"
+                               Margin="0,26,0,2" />
+                    <TextBlock Text="تحكم أدق · أداء أعلى" FontSize="13"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               HorizontalAlignment="Center" />
+
+                    <!-- بطاقات المميزات -->
+                    <UniformGrid Columns="3" Width="340" Margin="0,24,0,0">
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel HorizontalAlignment="Center">
+                                <!-- أيقونة تصويب مصغرة -->
+                                <Grid Width="18" Height="18" HorizontalAlignment="Center">
+                                    <Ellipse Width="10" Height="10" Stroke="{StaticResource AccentBrush}"
+                                             StrokeThickness="1.5" />
+                                    <Path Data="M9,0 L9,5 M9,13 L9,18 M0,9 L5,9 M13,9 L18,9"
+                                          Stroke="{StaticResource AccentBrush}" StrokeThickness="1.5" />
+                                </Grid>
+                                <TextBlock Text="دقة عالية" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="White" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE945;" FontFamily="{StaticResource IconFont}"
+                                           FontSize="17" Foreground="{StaticResource AccentBrush}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="استجابة فورية" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="White" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatCardStyle}">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE72E;" FontFamily="{StaticResource IconFont}"
+                                           FontSize="17" Foreground="{StaticResource AccentBrush}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="حماية كاملة" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="White" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Border>
 </Window>

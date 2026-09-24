@@ -63,31 +63,13 @@
         </Setter>
     </Style>
 
-    <!-- ===================== حقل كلمة المرور ===================== -->
-    <Style x:Key="InputPasswordBoxStyle" TargetType="PasswordBox">
-        <Setter Property="FontFamily" Value="{StaticResource MainFont}" />
-        <Setter Property="FontSize" Value="14" />
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-        <Setter Property="CaretBrush" Value="{StaticResource TextPrimaryBrush}" />
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="PasswordBox">
-                    <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" />
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <!-- إطار الحقل (أيقونة + حقل) -->
     <Style x:Key="InputContainerStyle" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource InputBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="Height" Value="48" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Height" Value="54" />
         <Setter Property="Padding" Value="14,0" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
@@ -95,7 +77,12 @@
             </Trigger>
             <!-- يأتي بعد IsMouseOver حتى يبقى لون التركيز ظاهراً -->
             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect Color="#8B1E3F" BlurRadius="16" ShadowDepth="0" Opacity="0.7" />
+                    </Setter.Value>
+                </Setter>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -108,24 +95,43 @@
         <Setter Property="Margin" Value="0,0,0,0" />
     </Style>
 
-    <!-- ===================== الزر الرئيسي ===================== -->
+    <!-- ===================== الزر الرئيسي (تدرج عنابي + توهج) ===================== -->
+    <LinearGradientBrush x:Key="PrimaryButtonBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#B02A55" Offset="0" />
+        <GradientStop Color="#7A1734" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="PrimaryButtonHoverBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#C8356A" Offset="0" />
+        <GradientStop Color="#8B1E3F" Offset="1" />
+    </LinearGradientBrush>
+
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
         <Setter Property="FontFamily" Value="{StaticResource MainFont}" />
         <Setter Property="FontSize" Value="15" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="White" />
-        <Setter Property="Background" Value="{StaticResource PrimaryBrush}" />
-        <Setter Property="Height" Value="48" />
+        <Setter Property="Background" Value="{StaticResource PrimaryButtonBrush}" />
+        <Setter Property="Height" Value="52" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="10">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="12">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#8B1E3F" BlurRadius="22"
+                                              ShadowDepth="0" Opacity="0.55" />
+                        </Border.Effect>
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PrimaryHoverBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PrimaryButtonHoverBrush}" />
+                            <Setter TargetName="Bd" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="#B02A55" BlurRadius="30"
+                                                      ShadowDepth="0" Opacity="0.85" />
+                                </Setter.Value>
+                            </Setter>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource PrimaryDarkBrush}" />
@@ -138,6 +144,74 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- ===================== زر ثانوي (إطار) ===================== -->
+    <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+        <Setter Property="FontFamily" Value="{StaticResource MainFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="Height" Value="44" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                            CornerRadius="10">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                            <Setter TargetName="Bd" Property="Background" Value="#1C1418" />
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== شارة (Pill) ===================== -->
+    <Style x:Key="PillStyle" TargetType="Border">
+        <Setter Property="Background" Value="#1F8B1E3F" />
+        <Setter Property="BorderBrush" Value="#558B1E3F" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Padding" Value="12,5" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+
+    <!-- ===================== بطاقة إحصائية صغيرة ===================== -->
+    <Style x:Key="StatCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="#0DFFFFFF" />
+        <Setter Property="BorderBrush" Value="#1AFFFFFF" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="8,12" />
+        <Setter Property="Margin" Value="5,0" />
+    </Style>
+
+    <!-- ===================== خلفية شبكية (طابع ألعاب) ===================== -->
+    <DrawingBrush x:Key="GridPatternBrush" TileMode="Tile" Stretch="None"
+                  Viewport="0,0,32,32" ViewportUnits="Absolute"
+                  Viewbox="0,0,32,32" ViewboxUnits="Absolute">
+        <DrawingBrush.Drawing>
+            <GeometryDrawing>
+                <GeometryDrawing.Pen>
+                    <Pen Brush="#0CFFFFFF" Thickness="1" />
+                </GeometryDrawing.Pen>
+                <GeometryDrawing.Geometry>
+                    <GeometryGroup>
+                        <LineGeometry StartPoint="0,0" EndPoint="32,0" />
+                        <LineGeometry StartPoint="0,0" EndPoint="0,32" />
+                    </GeometryGroup>
+                </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
 
     <!-- ===================== زر كرابط ===================== -->
     <Style x:Key="LinkButtonStyle" TargetType="Button">
