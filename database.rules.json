@@ -2,15 +2,13 @@
   "rules": {
     ".read": false,
     ".write": false,
-
     "update": {
       ".read": true
     },
-
     "users": {
       "$key": {
         ".read": true,
-        ".write": "data.exists() && data.child('device_id').val() === '' && data.child('subscription_active').val() === true && newData.child('subscription_active').val() === data.child('subscription_active').val() && newData.child('subscription_type').val() === data.child('subscription_type').val() && newData.child('device_id').isString() && newData.child('device_id').val().length >= 16 && newData.child('user_name').isString() && newData.child('user_name').val().length <= 100 && newData.child('subscription_date').isString() && newData.child('activated_at').val() === now",
+        ".write": "data.exists() && (!data.child('device_id').exists() || data.child('device_id').val() === '') && (data.child('subscription_active').val() === true || data.child('subscription_active').val() === 'true') && newData.child('subscription_active').val() === data.child('subscription_active').val() && newData.child('subscription_type').val() === data.child('subscription_type').val() && newData.child('device_id').isString() && newData.child('device_id').val().length >= 16 && newData.child('user_name').isString() && newData.child('user_name').val().length <= 100 && newData.child('subscription_date').isString() && newData.child('activated_at').val() === now",
         "$other": {
           ".validate": "$other === 'device_id' || $other === 'user_name' || $other === 'subscription_date' || $other === 'activated_at' || $other === 'subscription_active' || $other === 'subscription_type'"
         }

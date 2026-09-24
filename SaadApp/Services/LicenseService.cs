@@ -50,7 +50,7 @@ public sealed record LicenseResult(LicenseStatus Status, LicenseInfo? License = 
         LicenseStatus.InvalidType => "نوع الاشتراك غير محدد لهذا الكود، تواصل مع الدعم الفني",
         LicenseStatus.OtherDevice => "هذا الكود مفعّل على جهاز آخر",
         LicenseStatus.Expired => "انتهت صلاحية هذا الكود",
-        LicenseStatus.ActivationDenied => "تعذّر تفعيل الكود، تواصل مع الدعم الفني",
+        LicenseStatus.ActivationDenied => "تعذّر حفظ تفعيل الكود في قاعدة البيانات، تواصل مع الدعم الفني",
         LicenseStatus.AccessDenied => "قاعدة البيانات رفضت الاتصال، تحقق من قواعد الحماية (Rules)",
         LicenseStatus.NetworkError => "تعذّر الاتصال بالخادم، تحقق من الإنترنت",
         _ => "خطأ غير معروف",
@@ -108,21 +108,7 @@ public static partial class LicenseService
                 if (!precheck.IsValid)
                     return precheck;
 
-                try
-                {
-                    await FirebaseClient.PatchAsync(path, new Dictionary<string, object>
-                    {
-                        ["device_id"] = DeviceInfo.DeviceId,
-                        ["user_name"] = DeviceInfo.WindowsUserName,
-                        ["subscription_date"] = ServerClock.UtcNow.ToString(DateFormat, CultureInfo.InvariantCulture),
-                        // وقت الخادم الفعلي لحظة التفعيل (لا يمكن تزويره من الجهاز)
-                        ["activated_at"] = new Dictionary<string, string> { [".sv"] = "timestamp" },
-                    }, ct).ConfigureAwait(false);
-                }
-                catch (FirebaseException ex) when (ex.IsPermissionDenied)
-                {
-                    // قد يكون جهاز آخر فعّله في نفس اللحظة - نعيد القراءة للتأكد
-                }
+                string? writeError = await TryWriteActivationAsync(path, ct).ConfigureAwait(false);
 
                 node = await FirebaseClient.GetAsync(path, ct).ConfigureAwait(false);
                 if (node is not { ValueKind: JsonValueKind.Object } refreshed)
@@ -130,7 +116,7 @@ public static partial class LicenseService
 
                 record = refreshed;
                 if (ReadString(record, "device_id").Length == 0)
-                    return new LicenseResult(LicenseStatus.ActivationDenied);
+                    return new LicenseResult(LicenseStatus.ActivationDenied, Detail: writeError);
             }
 
             return Check(key, record, ignoreDevice: false);
@@ -190,6 +176,45 @@ public static partial class LicenseService
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// يحفظ بيانات التفعيل (الجهاز، اسم المستخدم، تاريخ البداية).
+    /// يحاول أولاً مع activated_at (وقت الخادم الفعلي)، وإذا رفضته قواعد قاعدة البيانات
+    /// يحفظ بدونه ويُعتمد subscription_date. يرجع null عند النجاح، أو وصف الخطأ.
+    /// </summary>
+    private static async Task<string?> TryWriteActivationAsync(string path, CancellationToken ct)
+    {
+        var fields = new Dictionary<string, object>
+        {
+            ["device_id"] = DeviceInfo.DeviceId,
+            ["user_name"] = DeviceInfo.WindowsUserName,
+            ["subscription_date"] = ServerClock.UtcNow.ToString(DateFormat, CultureInfo.InvariantCulture),
+            // وقت الخادم الفعلي لحظة التفعيل (لا يمكن تزويره من الجهاز)
+            ["activated_at"] = new Dictionary<string, string> { [".sv"] = "timestamp" },
+        };
+
+        try
+        {
+            await FirebaseClient.PatchAsync(path, fields, ct).ConfigureAwait(false);
+            return null;
+        }
+        catch (FirebaseException ex) when (ex.IsPermissionDenied)
+        {
+            // القواعد لا تسمح بحقل activated_at - نحاول بدونه
+        }
+
+        fields.Remove("activated_at");
+        try
+        {
+            await FirebaseClient.PatchAsync(path, fields, ct).ConfigureAwait(false);
+            return null;
+        }
+        catch (FirebaseException ex) when (ex.IsPermissionDenied)
+        {
+            // قد يكون جهاز آخر فعّله في نفس اللحظة - المتصل سيعيد القراءة للتأكد
+            return $"رفضت القواعد الحفظ، {ex.ShortDescription}";
+        }
     }
 
     /// <summary>وصف مختصر للخطأ يظهر للمستخدم للمساعدة في التشخيص.</summary>
