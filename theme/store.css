@@ -105,44 +105,45 @@ header {
   box-shadow: 0 0 18px var(--st-glow);
 }
 
-/* ---------- البنرات (يضيفها الـ JS) ----------
-   المتحرك تحت الهيدر، وطرق الدفع فوق التقييمات */
+/* ---------- البنرات ----------
+   الـ JS يضيف صندوقين فاضيين بالصفحة الرئيسية بس:
+   #st-top تحت الهيدر، و #st-pay فوق قسم التقييمات.
+   الصور هنا: لتغيير بنر، غيّر الرابط بـ --st-top-img أو --st-pay-img
+   (صورة أو GIF، ولازم تحافظ على نسبة العرض للطول أو تعدّل aspect-ratio) */
+:root {
+  --st-top-img: url("https://cdn.jsdelivr.net/gh/saadharazi/saad@9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/top-banner.webp");
+  --st-pay-img: url("https://cdn.jsdelivr.net/gh/saadharazi/saad@9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/payments.webp");
+}
+
 .st-banner {
   display: block;
   box-sizing: border-box;
-  width: 100%;
-  max-width: 1280px;
+  width: calc(100% - 32px);
+  max-width: 1248px;
   margin: 22px auto;
-  padding: 0 16px;
-  animation: st-rise 0.8s ease both;
-}
-.st-banner[hidden] { display: none; }
-.st-banner img,
-.st-banner video {
-  display: block;
-  width: 100%;
-  height: auto;
   border-radius: 20px;
   border: 1px solid var(--st-line);
   box-shadow: 0 14px 40px rgba(42, 8, 18, 0.14);
-  background: var(--st-bar);
+  background: var(--st-bar) center / cover no-repeat;
+  animation: st-rise 0.8s ease both;
   transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
-.st-banner img:hover,
-.st-banner video:hover {
+.st-banner[hidden] { display: none; }
+.st-banner:hover {
   transform: translateY(-3px);
   box-shadow: 0 18px 46px rgba(42, 8, 18, 0.2), 0 0 22px var(--st-glow);
 }
-/* البنر العلوي بنسبة عرض ثابتة عشان الصفحة ما تنط وهو يحمّل */
-#st-top img,
-#st-top video {
+
+/* نسبة عرض ثابتة لكل بنر عشان الصفحة ما تنط وهو يحمّل */
+#st-top {
+  background-image: var(--st-top-img);
   aspect-ratio: 59 / 33;
-  object-fit: cover;
+  max-width: 1000px; /* يبقى حاد (الصورة الحالية عرضها 590) */
 }
-#st-pay img { aspect-ratio: 1935 / 813; }
-/* البنر العلوي ما يتمدد أكثر من كذا بالكمبيوتر عشان يبقى حاد
-   (لو رفعت نسخة أكبر من الأصل، تقدر تكبّر الرقم) */
-#st-top { max-width: 1000px; }
+#st-pay {
+  background-image: var(--st-pay-img);
+  aspect-ratio: 1935 / 813;
+}
 
 @keyframes st-rise {
   from { opacity: 0; transform: translateY(14px); }
@@ -150,8 +151,7 @@ header {
 }
 
 @media (max-width: 767px) {
-  .st-banner { margin: 14px auto; padding: 0 10px; }
-  .st-banner img, .st-banner video { border-radius: 14px; }
+  .st-banner { width: calc(100% - 20px); margin: 14px auto; border-radius: 14px; }
 }
 
 /* ---------- 5) نبضة التوهج ---------- */

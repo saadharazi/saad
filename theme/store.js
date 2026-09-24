@@ -4,13 +4,15 @@
   قاعدة: ما ننقل ولا نحذف أي عنصر من عناصر المتجر، بس نضيف عناصرنا.
 */
 (function () {
-  /* ================= الإعدادات ================= */
-  var IMG = 'https://cdn.jsdelivr.net/gh/saadharazi/saad@9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
-  var RAW = 'https://raw.githubusercontent.com/saadharazi/saad/9a00e02b83988e5ce26fe22e889cc05b84458063/theme/img/';
-  var TOP_IMG = 'top-banner.webp'; // البنر العلوي (صورة أو GIF)
-  var PAY_IMG = 'payments.webp';   // بنر طرق الدفع
+  /* ================= الإعدادات =================
+     صور البنرات صارت بالـ CSS (#st-top و #st-pay) عشان الكود هنا يبقى صغير */
+  var doc = document;
+  // اختصار: كل العناصر اللي تطابق المحدد
+  function all(sel, root) {
+    return (root || doc).querySelectorAll(sel);
+  }
   var CART = /أضف للسلة|اضف للسلة|add to cart/i;
-  var REVIEWS = /تقييم|آراء|اراء|قالوا|عملاؤنا|عملائنا|review|testimonial/i;
+  var REVIEWS = /تقييم|آراء|اراء|قالوا|عملا|review/i;
 
   // الصفحة الرئيسية بس: "/" أو "/ar" أو "/en"
   function isHome() {
@@ -19,12 +21,12 @@
 
   /* ============ 1) شريط الأقسام (للجوال) ============ */
   function catBar() {
-    var header = document.querySelector('header');
-    var bar = document.querySelector('.st-cats');
+    var header = doc.querySelector('header');
+    var bar = doc.querySelector('.st-cats');
     if (!bar && header) {
-      var links = document.querySelectorAll('header a[href*="/category/"]');
+      var links = all('header a[href*="/category/"]');
       if (!links.length) return;
-      bar = document.createElement('nav');
+      bar = doc.createElement('nav');
       bar.className = 'st-cats';
       addLink(bar, '/products', 'جميع المنتجات');
       links.forEach(function (a) {
@@ -33,13 +35,13 @@
       });
       header.after(bar);
     }
-    if (bar) bar.querySelectorAll('a').forEach(function (a) {
+    if (bar) all('a', bar).forEach(function (a) {
       a.classList.toggle('st-on', a.pathname == location.pathname);
     });
   }
 
   function addLink(bar, href, text) {
-    var a = document.createElement('a');
+    var a = doc.createElement('a');
     a.href = href;
     a.textContent = text;
     bar.appendChild(a);
@@ -49,17 +51,17 @@
   // العلوي تحت الهيدر، وطرق الدفع فوق قسم التقييمات
   function banners() {
     var home = isHome();
-    var header = document.querySelector('header');
-    var top = document.getElementById('st-top');
-    var pay = document.getElementById('st-pay');
+    var header = doc.querySelector('header');
+    var top = doc.getElementById('st-top');
+    var pay = doc.getElementById('st-pay');
 
     if (home && !top && header) {
-      top = makeBanner('st-top', TOP_IMG, 'eager');
-      (document.querySelector('.st-cats') || header).after(top);
+      top = makeBanner('st-top');
+      (doc.querySelector('.st-cats') || header).after(top);
     }
     if (home && !pay) {
       var title = reviewsTitle();
-      if (title) rowOf(title).before(pay = makeBanner('st-pay', PAY_IMG, 'lazy'));
+      if (title) rowOf(title).before(pay = makeBanner('st-pay'));
     }
     if (top) top.hidden = !home;
     if (pay) pay.hidden = !home;
@@ -68,7 +70,7 @@
   // عنوان قسم التقييمات: أكبر نص قصير ظاهر فيه كلمة تقييم/آراء/...
   function reviewsTitle() {
     var best, size = 17; // حجم عنوان (18px وأكثر)، عشان نص التقييم الصغير بالكروت ما ينحسب
-    document.querySelectorAll('body *').forEach(function (e) {
+    all('body *').forEach(function (e) {
       var text = e.textContent.trim();
       if (text.length > 40 || !e.offsetWidth || !REVIEWS.test(text) ||
           e.closest('header, footer, a, button, .st-banner')) return;
@@ -80,35 +82,29 @@
 
   // أول صف عريض يحتوي العنوان (نحط البنر قبله)
   function rowOf(e) {
-    while (e.parentElement != document.body && e.offsetWidth < innerWidth * 0.5) e = e.parentElement;
+    while (e.parentElement != doc.body && e.offsetWidth < innerWidth * 0.5) e = e.parentElement;
     return e;
   }
 
-  function makeBanner(id, file, loading) {
-    var box = document.createElement('div');
-    var img = document.createElement('img');
+  // صندوق فاضي، والصورة تجي من الـ CSS
+  function makeBanner(id) {
+    var box = doc.createElement('div');
     box.id = id;
     box.className = 'st-banner';
-    img.alt = '';
-    img.loading = loading;
-    img.decoding = 'async';
-    img.onerror = function () { img.onerror = null; img.src = RAW + file; };
-    img.src = IMG + file;
-    box.appendChild(img);
     return box;
   }
 
   /* ====== 3) المنتج اللي لحاله بقسمه يجي بالنص ====== */
   function centerLone() {
-    document.querySelectorAll('button, a').forEach(function (btn) {
+    all('button, a').forEach(function (btn) {
       if (btn.st || !btn.offsetWidth || !CART.test(btn.textContent)) return;
       btn.st = 1;
       // الكرت = أصغر عنصر فيه صورة المنتج والزر، ثم أغلفته اللي بنفس عرضه تقريباً
       var card = btn, list;
-      while (card.parentElement != document.body && !card.querySelector('img')) card = card.parentElement;
-      while ((list = card.parentElement) != document.body && list.offsetWidth < card.offsetWidth * 1.2) card = list;
-      var carts = [].filter.call(list.querySelectorAll('button, a'), function (b) { return CART.test(b.textContent); });
-      if (list == document.body || carts.length != 1) return;
+      while (card.parentElement != doc.body && !card.querySelector('img')) card = card.parentElement;
+      while ((list = card.parentElement) != doc.body && list.offsetWidth < card.offsetWidth * 1.2) card = list;
+      var carts = [].filter.call(all('button, a', list), function (b) { return CART.test(b.textContent); });
+      if (list == doc.body || carts.length != 1) return;
       // نوسّط الكرت نفسه بس، ترتيب القسم ما يتغير
       card.style.cssText += ';width:' + card.offsetWidth + 'px;max-width:100%;flex:none;grid-column:1/-1;' +
         'margin-left:auto!important;margin-right:auto!important';
@@ -117,7 +113,7 @@
 
   /* ====== 4) الطبقات البيضاء الكبيرة اللي تغطي الخلفية ====== */
   function clearWhite() {
-    document.querySelectorAll('body div, body section').forEach(function (e) {
+    all('body div, body section').forEach(function (e) {
       if (e.st || e.closest('header, footer, [role=dialog]')) return;
       var r = e.getBoundingClientRect();
       if (r.width < innerWidth * 0.6 || r.height < 150) return;
@@ -148,9 +144,9 @@
     var busy = 0;
     new MutationObserver(function () {
       if (!busy) busy = setTimeout(function () { busy = 0; runAll(); }, 500);
-    }).observe(document.body, { childList: true, subtree: true });
+    }).observe(doc.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState == 'complete') start();
+  if (doc.readyState == 'complete') start();
   else addEventListener('load', start);
 })();
