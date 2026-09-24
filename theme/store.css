@@ -51,6 +51,15 @@ main {
   background: transparent !important;
 }
 
+/* أقسام الثيم الرمادية/البيضاء اللي تغطي الخلفية:
+   شريط عنوان الصفحة (breadcrumb) وأقسام bg-light / bg-lighten.
+   الكروت مستثناة. */
+.breadcrumb-section,
+.bg-light:not([class*="card"]),
+[class*="bg-lighten"]:not([class*="card"]) {
+  background-color: transparent !important;
+}
+
 /* ---------- 2) الشريط العلوي ---------- */
 header {
   background-color: var(--st-bar) !important;
