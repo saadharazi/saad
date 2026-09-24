@@ -138,7 +138,7 @@
   }
 
   /* ============================================================
-     5) خلفية الخطوط الطبوغرافية
+     5) خلفية الخطوط الطبوغرافية (نسخة متحركة)
      الـ canvas ينضاف بآخر الـ body وورا كل المحتوى (z-index: -1)
      ============================================================ */
   function initTopoBackground() {
@@ -278,6 +278,33 @@
     resize();
     if (SPEED > 0) rafId = requestAnimationFrame(loop);
     else drawFrame(0);
+    // النسخة المتحركة شغالة، فنخفي الخطوط الثابتة اللي بالـ CSS
+    document.documentElement.classList.add('st-anim');
+  }
+
+  /* ============================================================
+     6) إزالة "الطبقة البيضاء": أي حاوية كبيرة (أعرض من نص الشاشة
+     وأطول من 300px) خلفيتها بيضاء سادة تغطي الخلفية، نخليها شفافة.
+     الكروت والهيدر والنوافذ المنبثقة ما تنطبق عليها الشروط.
+     نغيّر لون الخلفية فقط، ما ننقل ولا نحذف شي.
+     ============================================================ */
+  function clearWhiteLayers() {
+    var minWidth = window.innerWidth * 0.6;
+    document.querySelectorAll('body div, body section, body main').forEach(function (el) {
+      if (el.hasAttribute('data-st-clear') || el.closest('header, .navbar, footer, [role="dialog"]')) return;
+      var rect = el.getBoundingClientRect();
+      if (rect.width < minWidth || rect.height < 300) return;
+      var cs = getComputedStyle(el);
+      if (cs.position === 'fixed' || cs.backgroundImage !== 'none') return;
+      var m = cs.backgroundColor.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/);
+      if (!m) return;
+      var alpha = m[4] === undefined ? 1 : parseFloat(m[4]);
+      // أبيض أو قريب من الأبيض (رمادي فاتح / بيج فاتح) وغير شفاف
+      if (alpha > 0.5 && +m[1] > 235 && +m[2] > 235 && +m[3] > 235) {
+        el.setAttribute('data-st-clear', '1');
+        el.style.setProperty('background-color', 'transparent', 'important');
+      }
+    });
   }
 
   /* ====== التشغيل ====== */
@@ -300,6 +327,7 @@
           safe(markActiveCat);
         }
         safe(animateCounters);
+        safe(clearWhiteLayers);
       }, 400);
     }).observe(document.body, { childList: true, subtree: true });
   }
@@ -310,6 +338,7 @@
     safe(initTopoBackground);
     safe(buildCatBar);
     safe(animateCounters);
+    safe(clearWhiteLayers);
     safe(watchPageChanges);
   }
 
