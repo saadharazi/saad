@@ -114,13 +114,21 @@ body, #rmz-ui-root, rmz-ui-store, main,
 }
 
 /*
-  أي حاوية ثانية بأول 3 مستويات من الصفحة (أغلفة الثيم، اسمها يختلف
-  من ثيم لثيم) تصير شفافة. نستثني الهيدر والفوتر والكروت والنوافذ.
-  (الـ JS كمان يدور على أي طبقة بيضاء كبيرة أعمق من كذا ويشيلها)
+  أي غلاف بالصفحة، بأي عمق، يصير شفاف عشان الخلفية تبان.
+  الطبقة البيضاء بمتجرك كانت أعمق من المستويات اللي قبل.
+  نستثني اللي لازم يبقى له لون: الكروت، القوائم المنسدلة، النوافذ،
+  السلة الجانبية، التنبيهات، وأي كرت منتج. (أبناء هذي العناصر يصيرون شفافين
+  فيبان لون العنصر نفسه، يعني شكلها ما يتغير)
 */
-:is(body, #rmz-ui-root) > :is(div, main, section, article):not([class*="card" i], [class*="rounded"], [class*="shadow"], [class*="modal"], [role="dialog"], [class*="drawer"], [class*="toast"], #rmz-splash),
-:is(body, #rmz-ui-root) > :not(header, footer, nav, .navbar) > :is(div, main, section, article):not([class*="card" i], [class*="rounded"], [class*="shadow"], [class*="modal"], [role="dialog"], [class*="drawer"], [class*="toast"]),
-:is(body, #rmz-ui-root) > :not(header, footer, nav, .navbar) > :not(header, footer, nav, .navbar) > :is(div, main, section, article):not([class*="card" i], [class*="rounded"], [class*="shadow"], [class*="modal"], [role="dialog"], [class*="drawer"], [class*="toast"]) {
+body :is(div, section, main, article, aside):not(
+  [class*="card" i], [class*="item" i], [class*="rounded"], [class*="shadow"],
+  [class*="dropdown"], [class*="menu" i], [class*="popover"], [class*="tooltip"],
+  [class*="modal"], [class*="offcanvas"], [class*="drawer"], [class*="toast"],
+  [class*="alert"], [class*="badge"], [class*="btn"],
+  [role="dialog"], [role="menu"], [role="listbox"], [role="alert"], #rmz-splash,
+  /* كرت منتج مهما كان اسمه: صورة المنتج قريبة منه (أول 3 مستويات) */
+  :has(> img, > * > img, > * > * > img, > picture, > * > picture)
+) {
   background-color: transparent !important;
 }
 
