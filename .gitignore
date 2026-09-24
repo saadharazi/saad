@@ -2,3 +2,7 @@ bin/
 obj/
 .vs/
 *.user
+
+# مفاتيح Firebase الخاصة - لا تُرفع أبداً
+*firebase-adminsdk*.json
+*service-account*.json

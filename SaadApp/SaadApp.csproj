@@ -10,4 +10,9 @@
     <AssemblyName>SaadApp</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- تشفير الكود المحفوظ على الجهاز (خيار "تذكرني") -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
 </Project>

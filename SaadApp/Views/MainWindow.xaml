@@ -9,7 +9,8 @@
         Background="Transparent"
         ResizeMode="NoResize"
         FlowDirection="RightToLeft"
-        FontFamily="{StaticResource MainFont}">
+        FontFamily="{StaticResource MainFont}"
+        Loaded="Window_Loaded" Closed="Window_Closed">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
@@ -155,7 +156,7 @@
                                             <DropShadowEffect Color="#2ECC71" BlurRadius="8" ShadowDepth="0" Opacity="1" />
                                         </Ellipse.Effect>
                                     </Ellipse>
-                                    <TextBlock Text="متصل · 12ms" FontSize="11" FontWeight="SemiBold" Margin="7,0,0,0"
+                                    <TextBlock x:Name="ConnectionText" Text="متصل" FontSize="11" FontWeight="SemiBold" Margin="7,0,0,0"
                                                Foreground="{StaticResource SuccessTextBrush}" />
                                 </StackPanel>
                             </Border>
@@ -658,7 +659,8 @@
                                     <Grid>
                                         <StackPanel HorizontalAlignment="Left">
                                             <TextBlock Text="BOOST" FontSize="10" FontWeight="SemiBold" Foreground="#A0FFFFFF" />
-                                            <TextBlock Text="PREMIUM" FontSize="18" FontWeight="Black" Foreground="White" />
+                                            <TextBlock x:Name="PlanText" Text="PREMIUM" FontSize="18" FontWeight="Black" Foreground="White"
+                                                       FlowDirection="LeftToRight" HorizontalAlignment="Left" />
                                         </StackPanel>
                                         <Border HorizontalAlignment="Right" VerticalAlignment="Center"
                                                 Background="#1FFFFFFF" BorderBrush="#30FFFFFF" BorderThickness="1"
@@ -674,7 +676,7 @@
                                         </Border>
                                     </Grid>
 
-                                    <TextBlock x:Name="KeyText" Grid.Row="1" Text="BST-••••-••••-7F2A"
+                                    <TextBlock x:Name="KeyText" Grid.Row="1" Text="••••"
                                                FontFamily="{StaticResource MonoFont}" FontSize="15"
                                                Foreground="#D0FFFFFF" FlowDirection="LeftToRight"
                                                HorizontalAlignment="Left" Margin="0,16,0,0" />
@@ -685,18 +687,18 @@
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                             <TextBlock x:Name="DaysLeftText" Text="27" FontSize="26" FontWeight="Black"
                                                        Foreground="White" />
-                                            <TextBlock Text="يوم" FontSize="12" Foreground="#B0FFFFFF"
+                                            <TextBlock x:Name="DaysUnitText" Text="يوم" FontSize="12" Foreground="#B0FFFFFF"
                                                        Margin="6,0,0,5" VerticalAlignment="Bottom" />
                                         </StackPanel>
                                     </Grid>
-                                    <ProgressBar Grid.Row="4" Value="90" Margin="0,6,0,0"
+                                    <ProgressBar x:Name="RemainingBar" Grid.Row="4" Value="100" Margin="0,6,0,0"
                                                  Style="{StaticResource SlimProgressBarStyle}"
                                                  Foreground="White" Background="#50000000">
                                         <ProgressBar.Effect>
                                             <DropShadowEffect Color="White" BlurRadius="10" ShadowDepth="0" Opacity="0.5" />
                                         </ProgressBar.Effect>
                                     </ProgressBar>
-                                    <TextBlock x:Name="ExpiryText" Grid.Row="5" Text="ينتهي في 2026/10/21"
+                                    <TextBlock x:Name="ExpiryText" Grid.Row="5" Text=""
                                                FontSize="10.5" Foreground="#90FFFFFF" Margin="0,8,0,0" />
                                 </Grid>
                             </Grid>

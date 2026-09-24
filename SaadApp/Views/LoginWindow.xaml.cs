@@ -1,29 +1,195 @@
+using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Effects;
+using SaadApp.Services;
 
 namespace SaadApp.Views;
 
 /// <summary>
-/// شاشة تسجيل الدخول - تصميم فقط، بدون منطق تسجيل الدخول حالياً.
+/// خيارات فتح شاشة الدخول.
+/// </summary>
+/// <param name="ErrorMessage">رسالة تظهر للمستخدم (مثلاً سبب إخراجه من التطبيق).</param>
+/// <param name="RunStartupChecks">فحص التحديث والدخول التلقائي بالكود المحفوظ (عند تشغيل التطبيق فقط).</param>
+public sealed record LoginOptions(string? ErrorMessage = null, bool RunStartupChecks = false);
+
+/// <summary>
+/// شاشة الدخول بكود التفعيل.
 /// </summary>
 public partial class LoginWindow : Window
 {
-    public LoginWindow()
+    private readonly LoginOptions _options;
+    private bool _busy;
+
+    // يُستخدم عند تشغيل التطبيق (StartupUri)
+    public LoginWindow() : this(new LoginOptions(RunStartupChecks: true))
+    {
+    }
+
+    public LoginWindow(LoginOptions options)
     {
         InitializeComponent();
+        _options = options;
+        VersionText.Text = "v" + AppConfig.CurrentVersion.ToString(CultureInfo.InvariantCulture);
+
+        string? savedKey = RememberedKeyStore.Load();
+        if (savedKey is not null)
+            AccessKeyTextBox.Text = savedKey;
     }
+
+    private async void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (_options.ErrorMessage is { } message)
+            ShowError(message);
+
+        if (_options.RunStartupChecks)
+            await RunStartupChecksAsync();
+        else
+            SetServerStatus(ServerClock.IsSynced);
+    }
+
+    /// <summary>
+    /// عند تشغيل التطبيق: فحص التحديث أولاً، ثم الدخول تلقائياً إذا كان الكود محفوظاً.
+    /// </summary>
+    private async Task RunStartupChecksAsync()
+    {
+        SetBusy(true, "جاري الاتصال...");
+
+        UpdateInfo? update;
+        try
+        {
+            update = await UpdateService.CheckAsync();
+            SetServerStatus(true);
+        }
+        catch
+        {
+            SetServerStatus(false);
+            SetBusy(false);
+            return;
+        }
+
+        if (update is not null)
+        {
+            new UpdateWindow(update).Show();
+            Close();
+            return;
+        }
+
+        SetBusy(false);
+
+        if (RememberedKeyStore.Load() is { } savedKey)
+            await LoginAsync(savedKey, fromSavedKey: true);
+    }
+
+    private async void LoginButton_Click(object sender, RoutedEventArgs e)
+    {
+        string key = AccessKeyTextBox.Text.Trim();
+        if (key.Length == 0)
+        {
+            ShowError("أدخل كود التفعيل");
+            AccessKeyTextBox.Focus();
+            return;
+        }
+
+        await LoginAsync(key, fromSavedKey: false);
+    }
+
+    private async Task LoginAsync(string key, bool fromSavedKey)
+    {
+        if (_busy)
+            return;
+
+        HideError();
+        SetBusy(true, "جاري التحقق...");
+
+        LicenseResult result;
+        try
+        {
+            result = await LicenseService.ActivateAsync(key);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+
+        SetServerStatus(!result.IsNetworkError);
+
+        if (!result.IsValid)
+        {
+            // الكود المحفوظ لم يعد صالحاً (وليس مجرد انقطاع إنترنت) -> نحذفه
+            if (fromSavedKey && !result.IsNetworkError)
+                RememberedKeyStore.Clear();
+
+            ShowError(result.Message);
+            return;
+        }
+
+        if (RememberKeyCheckBox.IsChecked == true)
+            RememberedKeyStore.Save(key);
+        else
+            RememberedKeyStore.Clear();
+
+        new MainWindow(result.License!).Show();
+        Close();
+    }
+
+    private void PasteButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (Clipboard.ContainsText())
+            {
+                AccessKeyTextBox.Text = Clipboard.GetText().Trim();
+                AccessKeyTextBox.CaretIndex = AccessKeyTextBox.Text.Length;
+                AccessKeyTextBox.Focus();
+            }
+        }
+        catch
+        {
+            // الحافظة مستخدمة من برنامج آخر
+        }
+    }
+
+    private void StoreButton_Click(object sender, RoutedEventArgs e) => UrlLauncher.Open(AppConfig.StoreUrl);
+
+    private void SupportButton_Click(object sender, RoutedEventArgs e) => UrlLauncher.Open(AppConfig.SupportUrl);
+
+    private void SetBusy(bool busy, string text = "دخول")
+    {
+        _busy = busy;
+        LoginButton.IsEnabled = !busy;
+        AccessKeyTextBox.IsEnabled = !busy;
+        PasteButton.IsEnabled = !busy;
+        LoginButtonText.Text = busy ? text : "دخول";
+        LoginButtonArrow.Visibility = busy ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void SetServerStatus(bool online)
+    {
+        var color = online ? Color.FromRgb(0x2E, 0xCC, 0x71) : Color.FromRgb(0xE0, 0x30, 0x4F);
+        ServerStatusDot.Fill = new SolidColorBrush(color);
+        ServerStatusDot.Effect = new DropShadowEffect { Color = color, BlurRadius = 8, ShadowDepth = 0, Opacity = 1 };
+        ServerStatusPill.Background = new SolidColorBrush(Color.FromArgb(0x14, color.R, color.G, color.B));
+        ServerStatusPill.BorderBrush = new SolidColorBrush(Color.FromArgb(0x26, color.R, color.G, color.B));
+        ServerStatusText.Foreground = new SolidColorBrush(online
+            ? Color.FromRgb(0x7F, 0xD8, 0xA0)
+            : Color.FromRgb(0xFF, 0x6B, 0x8B));
+        ServerStatusText.Text = online ? "الخادم متصل" : "الخادم غير متصل";
+    }
+
+    private void ShowError(string message)
+    {
+        ErrorMessageText.Text = message;
+        ErrorMessageBorder.Visibility = Visibility.Visible;
+    }
+
+    private void HideError() => ErrorMessageBorder.Visibility = Visibility.Collapsed;
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ButtonState == MouseButtonState.Pressed)
             DragMove();
-    }
-
-    private void LoginButton_Click(object sender, RoutedEventArgs e)
-    {
-        // حالياً للتصميم فقط: ننتقل للشاشة الرئيسية بدون التحقق من الكود
-        new MainWindow().Show();
-        Close();
     }
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)

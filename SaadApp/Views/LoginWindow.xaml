@@ -9,7 +9,8 @@
         Background="Transparent"
         ResizeMode="NoResize"
         FlowDirection="RightToLeft"
-        FontFamily="{StaticResource MainFont}">
+        FontFamily="{StaticResource MainFont}"
+        Loaded="Window_Loaded">
 
     <Border Width="960" Height="600" Margin="14"
             Background="{StaticResource WindowBackgroundBrush}"
@@ -150,10 +151,10 @@
                                          Style="{StaticResource InputTextBoxStyle}"
                                          FlowDirection="LeftToRight"
                                          FontFamily="{StaticResource MonoFont}" FontSize="15"
-                                         CharacterCasing="Upper" MaxLength="32"
-                                         Tag="XXXX-XXXX-XXXX-XXXX" />
+                                         MaxLength="64" Tag="أدخل كود التفعيل" />
                                 <Button x:Name="PasteButton" Grid.Column="2" Content="لصق"
-                                        Style="{StaticResource InlineButtonStyle}" ToolTip="لصق الكود" />
+                                        Style="{StaticResource InlineButtonStyle}" ToolTip="لصق الكود"
+                                        Click="PasteButton_Click" />
                             </Grid>
                         </Border>
 
@@ -166,8 +167,8 @@
                         <Button x:Name="LoginButton" Style="{StaticResource PrimaryButtonStyle}"
                                 IsDefault="True" Click="LoginButton_Click">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="دخول" VerticalAlignment="Center" />
-                                <TextBlock Text="&#xE72B;" FontFamily="{StaticResource IconFont}"
+                                <TextBlock x:Name="LoginButtonText" Text="دخول" VerticalAlignment="Center" />
+                                <TextBlock x:Name="LoginButtonArrow" Text="&#xE72B;" FontFamily="{StaticResource IconFont}"
                                            FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -201,13 +202,15 @@
 
                         <!-- شراء كود / الدعم الفني -->
                         <UniformGrid Columns="2">
-                            <Button x:Name="StoreButton" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,0">
+                            <Button x:Name="StoreButton" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,0"
+                                    Click="StoreButton_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE719;" Style="{StaticResource IconGlyphStyle}" FontSize="14" />
                                     <TextBlock Text="شراء كود" Margin="8,0,0,0" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <Button x:Name="SupportButton" Style="{StaticResource SecondaryButtonStyle}" Margin="6,0,0,0">
+                            <Button x:Name="SupportButton" Style="{StaticResource SecondaryButtonStyle}" Margin="6,0,0,0"
+                                    Click="SupportButton_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE8BD;" Style="{StaticResource IconGlyphStyle}" FontSize="14" />
                                     <TextBlock Text="الدعم الفني" Margin="8,0,0,0" VerticalAlignment="Center" />
@@ -218,14 +221,15 @@
 
                     <!-- التذييل -->
                     <Grid Grid.Row="2">
-                        <Border Style="{StaticResource SuccessPillStyle}">
+                        <Border x:Name="ServerStatusPill" Style="{StaticResource SuccessPillStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="7" Height="7" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center">
+                                <Ellipse x:Name="ServerStatusDot" Width="7" Height="7" Fill="{StaticResource SuccessBrush}"
+                                         VerticalAlignment="Center">
                                     <Ellipse.Effect>
                                         <DropShadowEffect Color="#2ECC71" BlurRadius="8" ShadowDepth="0" Opacity="1" />
                                     </Ellipse.Effect>
                                 </Ellipse>
-                                <TextBlock x:Name="ServerStatusText" Text="الخادم متصل" FontSize="11" FontWeight="SemiBold"
+                                <TextBlock x:Name="ServerStatusText" Text="جاري الاتصال..." FontSize="11" FontWeight="SemiBold"
                                            Margin="7,0,0,0" Foreground="{StaticResource SuccessTextBrush}" />
                             </StackPanel>
                         </Border>
