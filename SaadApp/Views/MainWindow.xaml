@@ -11,32 +11,81 @@
         FlowDirection="RightToLeft"
         FontFamily="{StaticResource MainFont}">
 
-    <Border Width="1140" Height="740" Margin="14"
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <!-- قيمة شريط التمرير داخل شارة -->
+        <Style x:Key="ValueBadgeStyle" TargetType="Border">
+            <Setter Property="Background" Value="#268B1E3F" />
+            <Setter Property="BorderBrush" Value="#558B1E3F" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="ValueTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FlowDirection" Value="LeftToRight" />
+        </Style>
+        <Style x:Key="TickTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{StaticResource TextFaintBrush}" />
+            <Setter Property="FlowDirection" Value="LeftToRight" />
+        </Style>
+        <Style x:Key="StatValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="ExtraBold" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FlowDirection" Value="LeftToRight" />
+        </Style>
+
+        <!-- تلوين جزء الجسم المختار -->
+        <Style x:Key="BodyPartStyle" TargetType="Shape">
+            <Setter Property="Fill" Value="#24242A" />
+            <Setter Property="Stroke" Value="#2E2E36" />
+            <Setter Property="StrokeThickness" Value="1" />
+        </Style>
+    </Window.Resources>
+
+    <Border Width="1180" Height="760" Margin="14"
             Background="{StaticResource WindowBackgroundBrush}"
-            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+            BorderBrush="#232329" BorderThickness="1"
             CornerRadius="16">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="24" ShadowDepth="0" Opacity="0.7" Color="Black" />
+            <DropShadowEffect BlurRadius="26" ShadowDepth="0" Opacity="0.75" Color="Black" />
         </Border.Effect>
 
-        <!-- القص على شكل الزوايا الدائرية (1138 × 738 = الحجم الداخلي) -->
+        <!-- القص على شكل الزوايا الدائرية (1178 × 758 = الحجم الداخلي) -->
         <Grid>
             <Grid.Clip>
-                <RectangleGeometry Rect="0,0,1138,738" RadiusX="15" RadiusY="15" />
+                <RectangleGeometry Rect="0,0,1178,758" RadiusX="15" RadiusY="15" />
             </Grid.Clip>
 
-            <!-- دوران الحلقة الخارجية لعلامة التصويب -->
             <Grid.Triggers>
                 <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                     <BeginStoryboard>
                         <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="HeroRingRotate"
-                                             Storyboard.TargetProperty="Angle"
-                                             From="0" To="360" Duration="0:0:24"
-                                             RepeatBehavior="Forever" />
-                            <DoubleAnimation Storyboard.TargetName="HeroInnerRing"
-                                             Storyboard.TargetProperty="Opacity"
-                                             From="1" To="0.45" Duration="0:0:1.6"
+                            <!-- ظهور المحتوى -->
+                            <DoubleAnimation Storyboard.TargetName="BodyGrid" Storyboard.TargetProperty="Opacity"
+                                             From="0" To="1" Duration="0:0:0.6" />
+                            <DoubleAnimation Storyboard.TargetName="BodyGrid"
+                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                             From="16" To="0" Duration="0:0:0.6">
+                                <DoubleAnimation.EasingFunction>
+                                    <CubicEase EasingMode="EaseOut" />
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <!-- وميض LIVE -->
+                            <DoubleAnimation Storyboard.TargetName="LiveDot" Storyboard.TargetProperty="Opacity"
+                                             From="1" To="0.2" Duration="0:0:0.8"
+                                             AutoReverse="True" RepeatBehavior="Forever" />
+                            <!-- نبض الهدف في المعاينة -->
+                            <DoubleAnimation Storyboard.TargetName="PreviewTargetHead" Storyboard.TargetProperty="Opacity"
+                                             From="1" To="0.55" Duration="0:0:0.9"
                                              AutoReverse="True" RepeatBehavior="Forever" />
                         </Storyboard>
                     </BeginStoryboard>
@@ -44,7 +93,7 @@
             </Grid.Triggers>
 
             <!-- ===================== طبقات الخلفية ===================== -->
-            <Rectangle Fill="{StaticResource GridPatternBrush}" Opacity="0.7">
+            <Rectangle Fill="{StaticResource GridPatternBrush}">
                 <Rectangle.OpacityMask>
                     <RadialGradientBrush Center="0.5,0" GradientOrigin="0.5,0" RadiusX="0.8" RadiusY="0.9">
                         <GradientStop Color="Black" Offset="0" />
@@ -53,11 +102,18 @@
                 </Rectangle.OpacityMask>
             </Rectangle>
 
-            <Ellipse Width="420" Height="300" Fill="#8B1E3F" Opacity="0.30"
-                     HorizontalAlignment="Left" VerticalAlignment="Top"
-                     Margin="120,-120,0,0" IsHitTestVisible="False">
+            <Ellipse Width="460" Height="300" Fill="#8B1E3F" Opacity="0.35"
+                     HorizontalAlignment="Right" VerticalAlignment="Top"
+                     Margin="0,-160,200,0" IsHitTestVisible="False">
                 <Ellipse.Effect>
-                    <BlurEffect Radius="160" />
+                    <BlurEffect Radius="150" />
+                </Ellipse.Effect>
+            </Ellipse>
+            <Ellipse Width="300" Height="300" Fill="#8B1E3F" Opacity="0.18"
+                     HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                     Margin="-60,0,0,-160" IsHitTestVisible="False">
+                <Ellipse.Effect>
+                    <BlurEffect Radius="130" />
                 </Ellipse.Effect>
             </Ellipse>
 
@@ -68,37 +124,39 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- ============ شريط العنوان ============ -->
+                <!-- ================= شريط العنوان ================= -->
                 <Border Grid.Row="0" Background="Transparent"
-                        BorderBrush="#1A1A1F" BorderThickness="0,0,0,1"
+                        BorderBrush="#17171B" BorderThickness="0,0,0,1"
                         MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                     <Grid Margin="20,0,12,0">
                         <!-- الشعار (يمين) -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                            <Border Width="30" Height="30" CornerRadius="9"
-                                    Background="{StaticResource PrimaryButtonBrush}">
+                            <Border Width="34" Height="34" CornerRadius="10" Background="{StaticResource PrimaryButtonBrush}">
                                 <Border.Effect>
-                                    <DropShadowEffect Color="#8B1E3F" BlurRadius="14" ShadowDepth="0" Opacity="0.7" />
+                                    <DropShadowEffect Color="#8B1E3F" BlurRadius="16" ShadowDepth="0" Opacity="0.8" />
                                 </Border.Effect>
-                                <TextBlock Text="B" FontSize="16" FontWeight="Black" Foreground="White"
+                                <TextBlock Text="B" FontSize="17" FontWeight="Black" Foreground="White"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Text="BOOST STORE" FontSize="14" FontWeight="Bold"
-                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                       VerticalAlignment="Center" Margin="10,0,0,0" />
-                            <Rectangle Width="1" Height="16" Fill="{StaticResource BorderBrush}"
-                                       Margin="12,0" VerticalAlignment="Center" />
-                            <TextBlock Text="AIM ASSIST" FontSize="11" FontWeight="SemiBold"
-                                       Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                            <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="BOOST STORE" FontSize="14" FontWeight="ExtraBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}" />
+                                <TextBlock Text="AIM ASSIST" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{StaticResource AccentBrush}" />
+                            </StackPanel>
                         </StackPanel>
 
                         <!-- الحالة + أزرار التحكم (يسار) -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <Border Background="#142ECC71" CornerRadius="20" Padding="10,4"
-                                    VerticalAlignment="Center" Margin="0,0,14,0">
+                            <Border Style="{StaticResource SuccessPillStyle}" Margin="0,0,12,0">
                                 <StackPanel Orientation="Horizontal">
-                                    <Ellipse Width="7" Height="7" Fill="#2ECC71" VerticalAlignment="Center" />
-                                    <TextBlock Text="متصل" FontSize="11" Margin="6,0,0,0" Foreground="#7FD8A0" />
+                                    <Ellipse Width="7" Height="7" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center">
+                                        <Ellipse.Effect>
+                                            <DropShadowEffect Color="#2ECC71" BlurRadius="8" ShadowDepth="0" Opacity="1" />
+                                        </Ellipse.Effect>
+                                    </Ellipse>
+                                    <TextBlock Text="متصل · 12ms" FontSize="11" FontWeight="SemiBold" Margin="7,0,0,0"
+                                               Foreground="{StaticResource SuccessTextBrush}" />
                                 </StackPanel>
                             </Border>
                             <Button x:Name="MinimizeButton" Content="&#xE921;"
@@ -111,159 +169,246 @@
                     </Grid>
                 </Border>
 
-                <!-- ============ جسم الشاشة ============ -->
-                <Grid Grid.Row="1" Margin="20">
+                <!-- ================= جسم الشاشة ================= -->
+                <Grid x:Name="BodyGrid" Grid.Row="1" Margin="22" Opacity="0">
+                    <Grid.RenderTransform>
+                        <TranslateTransform Y="0" />
+                    </Grid.RenderTransform>
                     <Grid.ColumnDefinitions>
                         <!-- مع RightToLeft: العمود الأول يمين (الرئيسي) والثالث يسار (الجانبي) -->
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="330" />
+                        <ColumnDefinition Width="360" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- ================= العمود الرئيسي ================= -->
+                    <!-- ============================================
+                         العمود الرئيسي
+                         ============================================ -->
                     <Grid Grid.Column="0">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="262" />
                             <RowDefinition Height="16" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <!-- ====== بطاقة التشغيل الرئيسية ====== -->
-                        <Border Grid.Row="0" CornerRadius="18" Padding="26,22"
-                                BorderBrush="#3A1522" BorderThickness="1">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#1C0C13" Offset="0" />
-                                    <GradientStop Color="#131316" Offset="0.6" />
-                                    <GradientStop Color="#1A0B11" Offset="1" />
-                                </LinearGradientBrush>
-                            </Border.Background>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="290" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="190" />
-                                </Grid.ColumnDefinitions>
+                            <!-- ====== بطاقة التشغيل ====== -->
+                            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="18,16"
+                                    BorderBrush="#3A1522">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0.4,1">
+                                        <GradientStop Color="#1E0C14" Offset="0" />
+                                        <GradientStop Color="#111114" Offset="0.65" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
 
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                    <!-- شارة الحالة -->
-                                    <Border Style="{StaticResource PillStyle}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}"
-                                                     VerticalAlignment="Center" />
-                                            <TextBlock FontSize="11" FontWeight="Bold" Margin="8,0,0,0"
-                                                       VerticalAlignment="Center">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="متوقف" />
-                                                        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                    <Grid>
+                                        <StackPanel HorizontalAlignment="Left">
+                                            <TextBlock Text="Aim Assist" FontSize="15" FontWeight="ExtraBold"
+                                                       Foreground="{StaticResource TextPrimaryBrush}" />
+                                            <TextBlock Text="التشغيل الرئيسي" Style="{StaticResource CardSubtitleStyle}" />
+                                        </StackPanel>
+                                        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                CornerRadius="20" Padding="11,4" BorderThickness="1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#1FE0507A" />
+                                                    <Setter Property="BorderBrush" Value="#44E0507A" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsChecked, ElementName=AimAssistToggle}" Value="False">
+                                                            <Setter Property="Background" Value="#10FFFFFF" />
+                                                            <Setter Property="BorderBrush" Value="#22FFFFFF" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="7" Height="7" VerticalAlignment="Center">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                                            <Setter Property="Effect" Value="{StaticResource AccentGlow}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsChecked, ElementName=AimAssistToggle}" Value="False">
+                                                                    <Setter Property="Fill" Value="{StaticResource TextMutedBrush}" />
+                                                                    <Setter Property="Effect" Value="{x:Null}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <TextBlock FontSize="11" FontWeight="Bold" Margin="7,0,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="يعمل" />
+                                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsChecked, ElementName=AimAssistToggle}" Value="False">
+                                                                    <Setter Property="Text" Value="متوقف" />
+                                                                    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- زر التشغيل الدائري -->
+                                    <CheckBox x:Name="AimAssistToggle" Grid.Row="1" IsChecked="True"
+                                              Style="{StaticResource PowerButtonStyle}"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+                                    <!-- زر التبديل السريع -->
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="تبديل سريع" FontSize="12" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextMutedBrush}" />
+                                        <Border Style="{StaticResource KeyCapStyle}" Margin="8,0,0,0">
+                                            <TextBlock Text="F1" FontFamily="{StaticResource MonoFont}" FontSize="12"
+                                                       FontWeight="Bold" Foreground="White" />
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- ====== المعاينة المباشرة ====== -->
+                            <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="16">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                            <Border Style="{StaticResource IconBadgeStyle}">
+                                                <TextBlock Text="&#xE890;" Style="{StaticResource IconGlyphStyle}" />
+                                            </Border>
+                                            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="معاينة مباشرة" Style="{StaticResource CardTitleStyle}" />
+                                                <TextBlock Text="شكل المساعد على الشاشة" Style="{StaticResource CardSubtitleStyle}" />
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <!-- النمط -->
+                                        <Border Style="{StaticResource SegmentedContainerStyle}" Padding="3"
+                                                HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <RadioButton Content="ناعم" GroupName="Mode" Height="26"
+                                                             Style="{StaticResource SegmentedRadioStyle}" />
+                                                <RadioButton Content="متوازن" GroupName="Mode" Height="26" IsChecked="True"
+                                                             Style="{StaticResource SegmentedRadioStyle}" />
+                                                <RadioButton Content="قوي" GroupName="Mode" Height="26"
+                                                             Style="{StaticResource SegmentedRadioStyle}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- شاشة المعاينة -->
+                                    <Border Grid.Row="1" Margin="0,14,0,0" CornerRadius="12"
+                                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                                        <Border.Background>
+                                            <RadialGradientBrush Center="0.5,0.6" GradientOrigin="0.5,0.6" RadiusX="0.7" RadiusY="0.9">
+                                                <GradientStop Color="#1A0E13" Offset="0" />
+                                                <GradientStop Color="#08080A" Offset="0.8" />
+                                            </RadialGradientBrush>
+                                        </Border.Background>
+
+                                        <Grid ClipToBounds="True">
+                                            <Rectangle Fill="{StaticResource GridPatternBrush}" Opacity="0.8" />
+
+                                            <!-- محتوى المعاينة (يبهت عند الإيقاف) -->
+                                            <Grid>
+                                                <Grid.Style>
+                                                    <Style TargetType="Grid">
+                                                        <Setter Property="Opacity" Value="1" />
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsChecked, ElementName=AimAssistToggle}" Value="True">
-                                                                <Setter Property="Text" Value="يعمل الآن" />
-                                                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                                            <DataTrigger Binding="{Binding IsChecked, ElementName=AimAssistToggle}" Value="False">
+                                                                <Setter Property="Opacity" Value="0.25" />
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </StackPanel>
+                                                </Grid.Style>
+
+                                                <!-- دائرة FOV: حجمها مربوط بشريط مجال الرؤية -->
+                                                <Ellipse Width="{Binding Value, ElementName=FovSlider}"
+                                                         Height="{Binding Value, ElementName=FovSlider}"
+                                                         Stroke="#AAE0507A" StrokeThickness="1.5" StrokeDashArray="4 3"
+                                                         Fill="#148B1E3F"
+                                                         Visibility="{Binding IsChecked, ElementName=ShowFovToggle, Converter={StaticResource BoolToVisibility}}"
+                                                         RenderTransformOrigin="0.5,0.5">
+                                                    <Ellipse.RenderTransform>
+                                                        <ScaleTransform ScaleX="1.1" ScaleY="1.1" />
+                                                    </Ellipse.RenderTransform>
+                                                </Ellipse>
+
+                                                <!-- الهدف وخط التصويب (الإحداثيات من مركز الشاشة) -->
+                                                <Canvas Width="0" Height="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Line X1="0" Y1="0" X2="42" Y2="-30"
+                                                          Stroke="{StaticResource AccentBrush}" StrokeThickness="1.5"
+                                                          StrokeDashArray="3 2" Opacity="0.8" />
+                                                    <Rectangle Canvas.Left="28" Canvas.Top="-20" Width="28" Height="36"
+                                                               RadiusX="9" RadiusY="9" Fill="#2A2A31" />
+                                                    <Ellipse x:Name="PreviewTargetHead" Canvas.Left="34" Canvas.Top="-39"
+                                                             Width="16" Height="16" Fill="{StaticResource AccentBrush}">
+                                                        <Ellipse.Effect>
+                                                            <DropShadowEffect Color="#E0507A" BlurRadius="16" ShadowDepth="0" Opacity="1" />
+                                                        </Ellipse.Effect>
+                                                    </Ellipse>
+                                                </Canvas>
+
+                                                <!-- علامة التصويب في المنتصف -->
+                                                <Ellipse Width="26" Height="26" Stroke="White" StrokeThickness="2" Opacity="0.9" />
+                                                <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}"
+                                                         Effect="{StaticResource AccentGlow}" />
+                                            </Grid>
+
+                                            <!-- LIVE -->
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                        Margin="0,10,12,0" FlowDirection="LeftToRight">
+                                                <Ellipse x:Name="LiveDot" Width="7" Height="7" Fill="#E74C3C" VerticalAlignment="Center">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect Color="#E74C3C" BlurRadius="8" ShadowDepth="0" Opacity="1" />
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                                <TextBlock Text="LIVE" FontSize="11" FontWeight="Bold" Foreground="#FF8A80"
+                                                           Margin="6,0,0,0" />
+                                            </StackPanel>
+
+                                            <!-- القيم الحالية -->
+                                            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,10"
+                                                    Background="#99000000" BorderBrush="{StaticResource BorderStrongBrush}"
+                                                    BorderThickness="1" CornerRadius="20" Padding="11,4">
+                                                <TextBlock FontSize="10.5" FontWeight="SemiBold" FlowDirection="LeftToRight"
+                                                           Foreground="{StaticResource TextSecondaryBrush}">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="FOV {0:0}° · {1:0}%">
+                                                            <Binding ElementName="FovSlider" Path="Value" />
+                                                            <Binding ElementName="StrengthSlider" Path="Value" />
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </Border>
+                                        </Grid>
                                     </Border>
-
-                                    <!-- العنوان + المفتاح الكبير -->
-                                    <Grid Margin="0,12,0,0">
-                                        <StackPanel HorizontalAlignment="Left">
-                                            <TextBlock Text="Aim Assist" FontSize="30" FontWeight="Black"
-                                                       Foreground="White" />
-                                            <TextBlock Text="تحكم كامل بمساعد التصويب من مكان واحد"
-                                                       FontSize="13" Margin="0,2,0,0"
-                                                       Foreground="{StaticResource TextSecondaryBrush}" />
-                                        </StackPanel>
-                                        <CheckBox x:Name="AimAssistToggle" IsChecked="True"
-                                                  Style="{StaticResource ToggleSwitchStyle}"
-                                                  HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                  Margin="0,0,24,0">
-                                            <CheckBox.LayoutTransform>
-                                                <ScaleTransform ScaleX="1.6" ScaleY="1.6" />
-                                            </CheckBox.LayoutTransform>
-                                        </CheckBox>
-                                    </Grid>
-
-                                    <!-- النمط + زر التفعيل السريع -->
-                                    <Grid Margin="0,22,0,0">
-                                        <StackPanel HorizontalAlignment="Left">
-                                            <TextBlock Text="النمط" FontSize="12" Margin="0,0,0,8"
-                                                       Foreground="{StaticResource TextMutedBrush}" />
-                                            <Border Style="{StaticResource SegmentedContainerStyle}">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <RadioButton Content="ناعم" GroupName="Mode"
-                                                                 Style="{StaticResource SegmentedRadioStyle}" />
-                                                    <RadioButton Content="متوازن" GroupName="Mode" IsChecked="True"
-                                                                 Style="{StaticResource SegmentedRadioStyle}" />
-                                                    <RadioButton Content="قوي" GroupName="Mode"
-                                                                 Style="{StaticResource SegmentedRadioStyle}" />
-                                                </StackPanel>
-                                            </Border>
-                                        </StackPanel>
-
-                                        <StackPanel HorizontalAlignment="Right" Margin="0,0,24,0">
-                                            <TextBlock Text="زر التفعيل السريع" FontSize="12" Margin="0,0,0,8"
-                                                       Foreground="{StaticResource TextMutedBrush}" />
-                                            <Border Background="#0D0D10" BorderBrush="#33333A" BorderThickness="1,1,1,3"
-                                                    CornerRadius="8" Height="36" MinWidth="64" Padding="14,0"
-                                                    HorizontalAlignment="Left">
-                                                <TextBlock Text="F1" FontFamily="Consolas" FontSize="14" FontWeight="Bold"
-                                                           Foreground="White"
-                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                            </Border>
-                                        </StackPanel>
-                                    </Grid>
-                                </StackPanel>
-
-                                <!-- علامة التصويب -->
-                                <Viewbox Grid.Column="1" Width="170" Height="170"
-                                         HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Viewbox.Style>
-                                        <Style TargetType="Viewbox">
-                                            <Setter Property="Opacity" Value="1" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, ElementName=AimAssistToggle}" Value="False">
-                                                    <Setter Property="Opacity" Value="0.25" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Viewbox.Style>
-                                    <Grid Width="260" Height="260">
-                                        <Path Data="M0,34 L0,0 L34,0 M226,0 L260,0 L260,34 M260,226 L260,260 L226,260 M34,260 L0,260 L0,226"
-                                              Stroke="#668B1E3F" StrokeThickness="3" />
-                                        <Ellipse Width="236" Height="236"
-                                                 Stroke="{StaticResource AccentBrush}" StrokeThickness="2"
-                                                 StrokeDashArray="2 6" Opacity="0.7"
-                                                 RenderTransformOrigin="0.5,0.5">
-                                            <Ellipse.RenderTransform>
-                                                <RotateTransform x:Name="HeroRingRotate" Angle="0" />
-                                            </Ellipse.RenderTransform>
-                                        </Ellipse>
-                                        <Ellipse Width="180" Height="180" Stroke="#26FFFFFF" StrokeThickness="1.5" />
-                                        <Ellipse x:Name="HeroInnerRing" Width="110" Height="110"
-                                                 Stroke="{StaticResource AccentBrush}" StrokeThickness="3">
-                                            <Ellipse.Effect>
-                                                <DropShadowEffect Color="#D6456E" BlurRadius="20" ShadowDepth="0" Opacity="0.9" />
-                                            </Ellipse.Effect>
-                                        </Ellipse>
-                                        <Path Data="M130,30 L130,98 M130,162 L130,230 M30,130 L98,130 M162,130 L230,130"
-                                              Stroke="White" StrokeThickness="3" Opacity="0.85"
-                                              StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
-                                        <Ellipse Width="12" Height="12" Fill="{StaticResource AccentBrush}">
-                                            <Ellipse.Effect>
-                                                <DropShadowEffect Color="#D6456E" BlurRadius="16" ShadowDepth="0" Opacity="1" />
-                                            </Ellipse.Effect>
-                                        </Ellipse>
-                                    </Grid>
-                                </Viewbox>
-                            </Grid>
-                        </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
 
                         <!-- ====== بطاقات الضبط (2 × 2) ====== -->
                         <Grid Grid.Row="2">
@@ -284,24 +429,31 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                             <Border Style="{StaticResource IconBadgeStyle}">
-                                                <TextBlock Text="&#xE945;" Style="{StaticResource IconBadgeGlyphStyle}" />
+                                                <TextBlock Text="&#xE945;" Style="{StaticResource IconGlyphStyle}" />
                                             </Border>
                                             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                                                 <TextBlock Text="قوة التثبيت" Style="{StaticResource CardTitleStyle}" />
-                                                <TextBlock Text="مدى قوة سحب التصويب نحو الهدف" Style="{StaticResource CardSubtitleStyle}" />
+                                                <TextBlock Text="مدى سحب التصويب نحو الهدف" Style="{StaticResource CardSubtitleStyle}" />
                                             </StackPanel>
                                         </StackPanel>
-                                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                   FontSize="20" FontWeight="Bold" Foreground="White"
-                                                   Text="{Binding Value, ElementName=StrengthSlider, StringFormat={}{0:0}%}" />
+                                        <Border Style="{StaticResource ValueBadgeStyle}">
+                                            <TextBlock Style="{StaticResource ValueTextStyle}"
+                                                       Text="{Binding Value, ElementName=StrengthSlider, StringFormat={}{0:0}%}" />
+                                        </Border>
                                     </Grid>
                                     <Slider x:Name="StrengthSlider" Grid.Row="1" VerticalAlignment="Bottom"
                                             Minimum="0" Maximum="100" Value="75"
                                             Style="{StaticResource AimSliderStyle}" />
+                                    <Grid Grid.Row="2" Margin="0,4,0,0">
+                                        <TextBlock Text="0" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Left" />
+                                        <TextBlock Text="50" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Center" />
+                                        <TextBlock Text="100" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Right" />
+                                    </Grid>
                                 </Grid>
                             </Border>
 
@@ -311,24 +463,31 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                             <Border Style="{StaticResource IconBadgeStyle}">
-                                                <TextBlock Text="&#xE9D9;" Style="{StaticResource IconBadgeGlyphStyle}" />
+                                                <TextBlock Text="&#xE9D9;" Style="{StaticResource IconGlyphStyle}" />
                                             </Border>
                                             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                                                 <TextBlock Text="النعومة" Style="{StaticResource CardTitleStyle}" />
                                                 <TextBlock Text="حركة أكثر سلاسة وطبيعية" Style="{StaticResource CardSubtitleStyle}" />
                                             </StackPanel>
                                         </StackPanel>
-                                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                   FontSize="20" FontWeight="Bold" Foreground="White"
-                                                   Text="{Binding Value, ElementName=SmoothSlider, StringFormat={}{0:0}%}" />
+                                        <Border Style="{StaticResource ValueBadgeStyle}">
+                                            <TextBlock Style="{StaticResource ValueTextStyle}"
+                                                       Text="{Binding Value, ElementName=SmoothSlider, StringFormat={}{0:0}%}" />
+                                        </Border>
                                     </Grid>
                                     <Slider x:Name="SmoothSlider" Grid.Row="1" VerticalAlignment="Bottom"
                                             Minimum="0" Maximum="100" Value="40"
                                             Style="{StaticResource AimSliderStyle}" />
+                                    <Grid Grid.Row="2" Margin="0,4,0,0">
+                                        <TextBlock Text="0" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Left" />
+                                        <TextBlock Text="50" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Center" />
+                                        <TextBlock Text="100" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Right" />
+                                    </Grid>
                                 </Grid>
                             </Border>
 
@@ -338,24 +497,35 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                             <Border Style="{StaticResource IconBadgeStyle}">
-                                                <TextBlock Text="&#xE890;" Style="{StaticResource IconBadgeGlyphStyle}" />
+                                                <Grid Width="16" Height="16">
+                                                    <Ellipse Width="14" Height="14" Stroke="{StaticResource AccentBrush}"
+                                                             StrokeThickness="1.5" StrokeDashArray="2 1.5" />
+                                                    <Ellipse Width="4" Height="4" Fill="{StaticResource AccentBrush}" />
+                                                </Grid>
                                             </Border>
                                             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                                                <TextBlock Text="مجال الرؤية (FOV)" Style="{StaticResource CardTitleStyle}" />
-                                                <TextBlock Text="حجم الدائرة التي يعمل داخلها المساعد" Style="{StaticResource CardSubtitleStyle}" />
+                                                <TextBlock Text="مجال الرؤية FOV" Style="{StaticResource CardTitleStyle}" />
+                                                <TextBlock Text="حجم دائرة عمل المساعد" Style="{StaticResource CardSubtitleStyle}" />
                                             </StackPanel>
                                         </StackPanel>
-                                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                   FontSize="20" FontWeight="Bold" Foreground="White"
-                                                   Text="{Binding Value, ElementName=FovSlider, StringFormat={}{0:0}°}" />
+                                        <Border Style="{StaticResource ValueBadgeStyle}">
+                                            <TextBlock Style="{StaticResource ValueTextStyle}"
+                                                       Text="{Binding Value, ElementName=FovSlider, StringFormat={}{0:0}°}" />
+                                        </Border>
                                     </Grid>
                                     <Slider x:Name="FovSlider" Grid.Row="1" VerticalAlignment="Bottom"
-                                            Minimum="10" Maximum="360" Value="120"
+                                            Minimum="20" Maximum="200" Value="120"
                                             Style="{StaticResource AimSliderStyle}" />
+                                    <Grid Grid.Row="2" Margin="0,4,0,0">
+                                        <TextBlock Text="20°" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Left" />
+                                        <TextBlock Text="110°" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Center" />
+                                        <TextBlock Text="200°" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Right" />
+                                    </Grid>
                                 </Grid>
                             </Border>
 
@@ -365,107 +535,171 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                             <Border Style="{StaticResource IconBadgeStyle}">
-                                                <TextBlock Text="&#xE916;" Style="{StaticResource IconBadgeGlyphStyle}" />
+                                                <TextBlock Text="&#xE916;" Style="{StaticResource IconGlyphStyle}" />
                                             </Border>
                                             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                                                 <TextBlock Text="سرعة الاستجابة" Style="{StaticResource CardTitleStyle}" />
-                                                <TextBlock Text="الوقت قبل بدء التثبيت على الهدف" Style="{StaticResource CardSubtitleStyle}" />
+                                                <TextBlock Text="الوقت قبل بدء التثبيت" Style="{StaticResource CardSubtitleStyle}" />
                                             </StackPanel>
                                         </StackPanel>
-                                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                   FontSize="20" FontWeight="Bold" Foreground="White"
-                                                   Text="{Binding Value, ElementName=ReactionSlider, StringFormat={}{0:0}ms}" />
+                                        <Border Style="{StaticResource ValueBadgeStyle}">
+                                            <TextBlock Style="{StaticResource ValueTextStyle}"
+                                                       Text="{Binding Value, ElementName=ReactionSlider, StringFormat={}{0:0}ms}" />
+                                        </Border>
                                     </Grid>
                                     <Slider x:Name="ReactionSlider" Grid.Row="1" VerticalAlignment="Bottom"
                                             Minimum="0" Maximum="200" Value="15"
                                             Style="{StaticResource AimSliderStyle}" />
+                                    <Grid Grid.Row="2" Margin="0,4,0,0">
+                                        <TextBlock Text="0" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Left" />
+                                        <TextBlock Text="100" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Center" />
+                                        <TextBlock Text="200ms" Style="{StaticResource TickTextStyle}" HorizontalAlignment="Right" />
+                                    </Grid>
                                 </Grid>
                             </Border>
                         </Grid>
 
                         <!-- ====== خيارات سريعة ====== -->
                         <Border Grid.Row="4" Style="{StaticResource CardStyle}" Padding="18,14">
-                            <UniformGrid Columns="3">
-                                <Grid Margin="0,0,14,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="1" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Grid.Column="0" Margin="0,0,16,0">
                                     <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <TextBlock Text="إظهار دائرة FOV" Style="{StaticResource CardTitleStyle}" FontSize="13" />
                                         <TextBlock Text="عرض المجال على الشاشة" Style="{StaticResource CardSubtitleStyle}" />
                                     </StackPanel>
-                                    <CheckBox IsChecked="True" Style="{StaticResource ToggleSwitchStyle}"
+                                    <CheckBox x:Name="ShowFovToggle" IsChecked="True" Style="{StaticResource ToggleSwitchStyle}"
                                               HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </Grid>
-                                <Grid Margin="7,0">
+                                <Rectangle Grid.Column="1" Fill="{StaticResource BorderBrush}" />
+                                <Grid Grid.Column="2" Margin="16,0">
                                     <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <TextBlock Text="التنبؤ بالحركة" Style="{StaticResource CardTitleStyle}" FontSize="13" />
                                         <TextBlock Text="توقع اتجاه الهدف" Style="{StaticResource CardSubtitleStyle}" />
                                     </StackPanel>
-                                    <CheckBox IsChecked="True" Style="{StaticResource ToggleSwitchStyle}"
+                                    <CheckBox x:Name="PredictionToggle" IsChecked="True" Style="{StaticResource ToggleSwitchStyle}"
                                               HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </Grid>
-                                <Grid Margin="14,0,0,0">
+                                <Rectangle Grid.Column="3" Fill="{StaticResource BorderBrush}" />
+                                <Grid Grid.Column="4" Margin="16,0,0,0">
                                     <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <TextBlock Text="الهدف الأقرب" Style="{StaticResource CardTitleStyle}" FontSize="13" />
                                         <TextBlock Text="أولوية للأقرب للمؤشر" Style="{StaticResource CardSubtitleStyle}" />
                                     </StackPanel>
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}"
+                                    <CheckBox x:Name="ClosestTargetToggle" Style="{StaticResource ToggleSwitchStyle}"
                                               HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </Grid>
-                            </UniformGrid>
+                            </Grid>
                         </Border>
                     </Grid>
 
-                    <!-- ================= العمود الجانبي ================= -->
+                    <!-- ============================================
+                         العمود الجانبي
+                         ============================================ -->
                     <Grid Grid.Column="2">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="200" />
                             <RowDefinition Height="16" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <!-- ====== الاشتراك ====== -->
-                        <Border Grid.Row="0" Style="{StaticResource CardStyle}">
-                            <StackPanel>
-                                <Grid>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                        <Border Style="{StaticResource IconBadgeStyle}">
-                                            <TextBlock Text="&#xE8D7;" Style="{StaticResource IconBadgeGlyphStyle}" />
+                        <!-- ====== بطاقة الاشتراك (Premium) ====== -->
+                        <Border Grid.Row="0" CornerRadius="16" BorderBrush="#66B02A55" BorderThickness="1">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#9E2449" Offset="0" />
+                                    <GradientStop Color="#5E1029" Offset="0.45" />
+                                    <GradientStop Color="#1A070E" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#8B1E3F" BlurRadius="30" ShadowDepth="8" Direction="270" Opacity="0.35" />
+                            </Border.Effect>
+
+                            <!-- 358 × 198 = الحجم الداخلي للبطاقة -->
+                            <Grid>
+                                <Grid.Clip>
+                                    <RectangleGeometry Rect="0,0,358,198" RadiusX="15" RadiusY="15" />
+                                </Grid.Clip>
+
+                                <!-- زخارف -->
+                                <TextBlock Text="B" FontSize="220" FontWeight="Black" Foreground="#0CFFFFFF"
+                                           HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                           Margin="0,0,-10,-80" />
+                                <Ellipse Width="200" Height="200" Stroke="#18FFFFFF" StrokeThickness="1"
+                                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-90,-60,0" />
+                                <Ellipse Width="140" Height="140" Stroke="#12FFFFFF" StrokeThickness="1"
+                                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-50,-20,0" />
+
+                                <Grid Margin="20,18,20,16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid>
+                                        <StackPanel HorizontalAlignment="Left">
+                                            <TextBlock Text="BOOST" FontSize="10" FontWeight="SemiBold" Foreground="#A0FFFFFF" />
+                                            <TextBlock Text="PREMIUM" FontSize="18" FontWeight="Black" Foreground="White" />
+                                        </StackPanel>
+                                        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                Background="#1FFFFFFF" BorderBrush="#30FFFFFF" BorderThickness="1"
+                                                CornerRadius="20" Padding="11,4">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="7" Height="7" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect Color="#2ECC71" BlurRadius="6" ShadowDepth="0" Opacity="1" />
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                                <TextBlock Text="نشط" FontSize="11" FontWeight="Bold" Foreground="White" Margin="7,0,0,0" />
+                                            </StackPanel>
                                         </Border>
-                                        <TextBlock Text="الاشتراك" Style="{StaticResource CardTitleStyle}"
-                                                   Margin="12,0,0,0" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <Border Background="#142ECC71" CornerRadius="20" Padding="10,3"
-                                            HorizontalAlignment="Right" VerticalAlignment="Center">
-                                        <TextBlock Text="نشط" FontSize="11" FontWeight="SemiBold" Foreground="#7FD8A0" />
-                                    </Border>
-                                </Grid>
+                                    </Grid>
 
-                                <Border Background="#0D0D10" CornerRadius="8" Padding="12,8" Margin="0,14,0,0">
-                                    <TextBlock x:Name="KeyText" Text="BST-••••-••••-7F2A" FlowDirection="LeftToRight"
-                                               FontFamily="Consolas" FontSize="13"
-                                               Foreground="{StaticResource TextSecondaryBrush}"
-                                               HorizontalAlignment="Center" />
-                                </Border>
+                                    <TextBlock x:Name="KeyText" Grid.Row="1" Text="BST-••••-••••-7F2A"
+                                               FontFamily="{StaticResource MonoFont}" FontSize="15"
+                                               Foreground="#D0FFFFFF" FlowDirection="LeftToRight"
+                                               HorizontalAlignment="Left" Margin="0,16,0,0" />
 
-                                <Grid Margin="0,14,0,8">
-                                    <TextBlock Text="المدة المتبقية" FontSize="12" VerticalAlignment="Bottom"
-                                               Foreground="{StaticResource TextMutedBrush}" />
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                        <TextBlock x:Name="DaysLeftText" Text="27" FontSize="22" FontWeight="Bold"
-                                                   Foreground="White" />
-                                        <TextBlock Text="يوم" FontSize="12" Margin="6,0,0,3" VerticalAlignment="Bottom"
-                                                   Foreground="{StaticResource TextSecondaryBrush}" />
-                                    </StackPanel>
+                                    <Grid Grid.Row="3">
+                                        <TextBlock Text="المدة المتبقية" FontSize="11" Foreground="#A0FFFFFF"
+                                                   VerticalAlignment="Bottom" Margin="0,0,0,4" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <TextBlock x:Name="DaysLeftText" Text="27" FontSize="26" FontWeight="Black"
+                                                       Foreground="White" />
+                                            <TextBlock Text="يوم" FontSize="12" Foreground="#B0FFFFFF"
+                                                       Margin="6,0,0,5" VerticalAlignment="Bottom" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <ProgressBar Grid.Row="4" Value="90" Margin="0,6,0,0"
+                                                 Style="{StaticResource SlimProgressBarStyle}"
+                                                 Foreground="White" Background="#50000000">
+                                        <ProgressBar.Effect>
+                                            <DropShadowEffect Color="White" BlurRadius="10" ShadowDepth="0" Opacity="0.5" />
+                                        </ProgressBar.Effect>
+                                    </ProgressBar>
+                                    <TextBlock x:Name="ExpiryText" Grid.Row="5" Text="ينتهي في 2026/10/21"
+                                               FontSize="10.5" Foreground="#90FFFFFF" Margin="0,8,0,0" />
                                 </Grid>
-                                <ProgressBar Value="90" Maximum="100" Style="{StaticResource SlimProgressBarStyle}" />
-                                <TextBlock x:Name="ExpiryText" Text="ينتهي في 2026/10/21" FontSize="11" Margin="0,8,0,0"
-                                           Foreground="{StaticResource TextMutedBrush}" />
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <!-- ====== نقطة الاستهداف ====== -->
@@ -490,82 +724,75 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <Grid Grid.Row="1" Margin="0,14,0,0" VerticalAlignment="Center">
+                                <Grid Grid.Row="1" Margin="0,12,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="120" />
                                     </Grid.ColumnDefinitions>
 
                                     <!-- الخيارات -->
-                                    <StackPanel VerticalAlignment="Center">
-                                        <RadioButton x:Name="TargetHeadRadio" Content="الرأس" GroupName="Target"
-                                                     IsChecked="True" HorizontalContentAlignment="Left"
-                                                     Style="{StaticResource SegmentedRadioStyle}" />
-                                        <RadioButton x:Name="TargetChestRadio" Content="الصدر" GroupName="Target"
-                                                     HorizontalContentAlignment="Left" Margin="0,6,0,0"
-                                                     Style="{StaticResource SegmentedRadioStyle}" />
-                                        <RadioButton x:Name="TargetBodyRadio" Content="الجسم" GroupName="Target"
-                                                     HorizontalContentAlignment="Left" Margin="0,6,0,0"
-                                                     Style="{StaticResource SegmentedRadioStyle}" />
-                                    </StackPanel>
+                                    <Border Style="{StaticResource SegmentedContainerStyle}" VerticalAlignment="Center">
+                                        <StackPanel>
+                                            <RadioButton x:Name="TargetHeadRadio" Content="الرأس" GroupName="Target"
+                                                         IsChecked="True" Style="{StaticResource OptionRadioStyle}" />
+                                            <RadioButton x:Name="TargetChestRadio" Content="الصدر" GroupName="Target"
+                                                         Margin="0,3,0,0" Style="{StaticResource OptionRadioStyle}" />
+                                            <RadioButton x:Name="TargetBodyRadio" Content="الجسم" GroupName="Target"
+                                                         Margin="0,3,0,0" Style="{StaticResource OptionRadioStyle}" />
+                                        </StackPanel>
+                                    </Border>
 
-                                    <!-- مجسم الجسم (يتلون الجزء المختار) -->
-                                    <Canvas Grid.Column="1" Width="90" Height="130"
-                                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <Ellipse Canvas.Left="32" Canvas.Top="0" Width="26" Height="26">
-                                            <Ellipse.Style>
-                                                <Style TargetType="Ellipse">
-                                                    <Setter Property="Fill" Value="#26262C" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsChecked, ElementName=TargetHeadRadio}" Value="True">
-                                                            <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
-                                                            <Setter Property="Effect">
-                                                                <Setter.Value>
-                                                                    <DropShadowEffect Color="#D6456E" BlurRadius="16" ShadowDepth="0" Opacity="0.9" />
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Ellipse.Style>
+                                    <!-- مجسم الجسم -->
+                                    <Grid Grid.Column="1" VerticalAlignment="Center">
+                                        <Ellipse Width="110" Height="110" Fill="#8B1E3F" Opacity="0.25" IsHitTestVisible="False">
+                                            <Ellipse.Effect>
+                                                <BlurEffect Radius="40" />
+                                            </Ellipse.Effect>
                                         </Ellipse>
-                                        <Rectangle Canvas.Left="20" Canvas.Top="31" Width="50" Height="44"
-                                                   RadiusX="12" RadiusY="12">
-                                            <Rectangle.Style>
-                                                <Style TargetType="Rectangle">
-                                                    <Setter Property="Fill" Value="#26262C" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsChecked, ElementName=TargetChestRadio}" Value="True">
-                                                            <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
-                                                            <Setter Property="Effect">
-                                                                <Setter.Value>
-                                                                    <DropShadowEffect Color="#D6456E" BlurRadius="16" ShadowDepth="0" Opacity="0.9" />
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Rectangle.Style>
-                                        </Rectangle>
-                                        <Rectangle Canvas.Left="25" Canvas.Top="79" Width="40" Height="51"
-                                                   RadiusX="10" RadiusY="10">
-                                            <Rectangle.Style>
-                                                <Style TargetType="Rectangle">
-                                                    <Setter Property="Fill" Value="#26262C" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsChecked, ElementName=TargetBodyRadio}" Value="True">
-                                                            <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
-                                                            <Setter Property="Effect">
-                                                                <Setter.Value>
-                                                                    <DropShadowEffect Color="#D6456E" BlurRadius="16" ShadowDepth="0" Opacity="0.9" />
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Rectangle.Style>
-                                        </Rectangle>
-                                    </Canvas>
+                                        <Canvas Width="90" Height="128" HorizontalAlignment="Center">
+                                            <Ellipse Canvas.Left="31" Canvas.Top="0" Width="28" Height="28">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse" BasedOn="{StaticResource BodyPartStyle}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsChecked, ElementName=TargetHeadRadio}" Value="True">
+                                                                <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                                                <Setter Property="Stroke" Value="{StaticResource AccentBrush}" />
+                                                                <Setter Property="Effect" Value="{StaticResource AccentGlow}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                            <Rectangle Canvas.Left="18" Canvas.Top="32" Width="54" Height="44"
+                                                       RadiusX="13" RadiusY="13">
+                                                <Rectangle.Style>
+                                                    <Style TargetType="Rectangle" BasedOn="{StaticResource BodyPartStyle}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsChecked, ElementName=TargetChestRadio}" Value="True">
+                                                                <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                                                <Setter Property="Stroke" Value="{StaticResource AccentBrush}" />
+                                                                <Setter Property="Effect" Value="{StaticResource AccentGlow}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Rectangle.Style>
+                                            </Rectangle>
+                                            <Rectangle Canvas.Left="23" Canvas.Top="80" Width="44" Height="48"
+                                                       RadiusX="11" RadiusY="11">
+                                                <Rectangle.Style>
+                                                    <Style TargetType="Rectangle" BasedOn="{StaticResource BodyPartStyle}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsChecked, ElementName=TargetBodyRadio}" Value="True">
+                                                                <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                                                <Setter Property="Stroke" Value="{StaticResource AccentBrush}" />
+                                                                <Setter Property="Effect" Value="{StaticResource AccentGlow}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Rectangle.Style>
+                                            </Rectangle>
+                                        </Canvas>
+                                    </Grid>
                                 </Grid>
                             </Grid>
                         </Border>
@@ -576,44 +803,63 @@
                                 <Grid>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                         <Border Style="{StaticResource IconBadgeStyle}">
-                                            <TextBlock Text="&#xE9D9;" Style="{StaticResource IconBadgeGlyphStyle}" />
+                                            <TextBlock Text="&#xE9D9;" Style="{StaticResource IconGlyphStyle}" />
                                         </Border>
                                         <TextBlock Text="الأداء" Style="{StaticResource CardTitleStyle}"
                                                    Margin="12,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <Border Style="{StaticResource PillStyle}" HorizontalAlignment="Right"
-                                            Padding="10,3" VerticalAlignment="Center">
-                                        <TextBlock Text="أداء عالي" FontSize="11" FontWeight="SemiBold"
+                                    <Border Style="{StaticResource PillStyle}" HorizontalAlignment="Right" Padding="10,3">
+                                        <TextBlock Text="أداء عالي" FontSize="11" FontWeight="Bold"
                                                    Foreground="{StaticResource AccentBrush}" />
                                     </Border>
                                 </Grid>
 
-                                <!-- المعالج -->
-                                <Grid Margin="0,16,0,6">
-                                    <TextBlock Text="استخدام المعالج" FontSize="12"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
-                                    <TextBlock Text="3%" FontSize="12" FontWeight="SemiBold" Foreground="White"
-                                               HorizontalAlignment="Right" />
-                                </Grid>
-                                <ProgressBar Value="3" Style="{StaticResource SlimProgressBarStyle}" Height="4" />
+                                <UniformGrid Columns="3" Margin="0,14,0,0">
+                                    <Border Style="{StaticResource StatTileStyle}" Margin="0,0,4,0">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource StatValueStyle}" Text="3%" />
+                                            <TextBlock Text="المعالج" Style="{StaticResource CardSubtitleStyle}"
+                                                       HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource StatTileStyle}" Margin="4,0">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource StatValueStyle}">
+                                                <Run Text="48" /><Run Text=" MB" FontSize="11" FontWeight="SemiBold"
+                                                                      Foreground="{StaticResource TextSecondaryBrush}" />
+                                            </TextBlock>
+                                            <TextBlock Text="الذاكرة" Style="{StaticResource CardSubtitleStyle}"
+                                                       HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Style="{StaticResource StatTileStyle}" Margin="4,0,0,0">
+                                        <StackPanel>
+                                            <TextBlock Style="{StaticResource StatValueStyle}">
+                                                <Run Text="1" /><Run Text=" ms" FontSize="11" FontWeight="SemiBold"
+                                                                     Foreground="{StaticResource TextSecondaryBrush}" />
+                                            </TextBlock>
+                                            <TextBlock Text="التأخير" Style="{StaticResource CardSubtitleStyle}"
+                                                       HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                </UniformGrid>
 
-                                <!-- الذاكرة -->
-                                <Grid Margin="0,12,0,6">
-                                    <TextBlock Text="الذاكرة" FontSize="12"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
-                                    <TextBlock Text="48 MB" FontSize="12" FontWeight="SemiBold" Foreground="White"
-                                               HorizontalAlignment="Right" />
-                                </Grid>
-                                <ProgressBar Value="12" Style="{StaticResource SlimProgressBarStyle}" Height="4" />
-
-                                <!-- زمن الاستجابة -->
-                                <Grid Margin="0,12,0,6">
-                                    <TextBlock Text="زمن التأخير" FontSize="12"
-                                               Foreground="{StaticResource TextSecondaryBrush}" />
-                                    <TextBlock Text="1 ms" FontSize="12" FontWeight="SemiBold" Foreground="White"
-                                               HorizontalAlignment="Right" />
-                                </Grid>
-                                <ProgressBar Value="5" Style="{StaticResource SlimProgressBarStyle}" Height="4" />
+                                <!-- منحنى استقرار الأداء -->
+                                <Viewbox Stretch="Fill" Height="44" Margin="0,12,0,0">
+                                    <Canvas Width="320" Height="46">
+                                        <Polygon Points="0,30 20,26 40,28 60,20 80,24 100,18 120,22 140,14 160,18 180,12 200,16 220,10 240,14 260,8 280,12 300,6 320,9 320,46 0,46">
+                                            <Polygon.Fill>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#59E0507A" Offset="0" />
+                                                    <GradientStop Color="#00E0507A" Offset="1" />
+                                                </LinearGradientBrush>
+                                            </Polygon.Fill>
+                                        </Polygon>
+                                        <Polyline Points="0,30 20,26 40,28 60,20 80,24 100,18 120,22 140,14 160,18 180,12 200,16 220,10 240,14 260,8 280,12 300,6 320,9"
+                                                  Stroke="{StaticResource AccentBrush}" StrokeThickness="2"
+                                                  StrokeLineJoin="Round" Effect="{StaticResource AccentGlow}" />
+                                    </Canvas>
+                                </Viewbox>
                             </StackPanel>
                         </Border>
                     </Grid>
