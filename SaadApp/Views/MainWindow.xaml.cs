@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using SaadApp.Services;
 
@@ -23,6 +24,7 @@ public partial class MainWindow : Window
     private readonly Queue<int> _latencyHistory = new();
     private readonly AimSettings _settings;
     private bool _kicked;
+    private bool _checkingUpdate;
 
     public MainWindow(LicenseInfo license)
     {
@@ -30,6 +32,8 @@ public partial class MainWindow : Window
 
         _settings = AimSettings.Load();
         ApplySettings(_settings);
+        InitializeSettingsPage();
+        InitializeContactPage();
 
         _monitor = new LicenseMonitor(license);
         _monitor.Revoked += Kick;
@@ -72,6 +76,10 @@ public partial class MainWindow : Window
         KeyText.Text = MaskKey(license.Key);
         KeyText.FlowDirection = ContainsArabic(license.Key) ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         PlanText.Text = license.Plan.DisplayName;
+        AccountKeyText.Text = KeyText.Text;
+        AccountKeyText.FlowDirection = KeyText.FlowDirection;
+        AccountPlanText.Text = license.Plan.DisplayName;
+        AccountExpiryText.Text = license.ExpiresUtc is { } expires ? FormatDateTime(expires) : "لا ينتهي";
 
         if (license.Plan.IsLifetime)
         {
@@ -94,19 +102,20 @@ public partial class MainWindow : Window
             Kick("انتهى اشتراكك", true);
     }
 
+    // التاريخ داخل علامتي اتجاه (LRE ... PDF) حتى يظهر بترتيبه الصحيح داخل النص العربي
     private static string FormatDate(DateTime utc) =>
-        utc.ToLocalTime().ToString("yyyy/MM/dd", DateCulture);
+        "\u202A" + utc.ToLocalTime().ToString("yyyy/MM/dd", DateCulture) + "\u202C";
 
     private static string FormatDateTime(DateTime utc) =>
-        utc.ToLocalTime().ToString("yyyy/MM/dd hh:mm tt", DateCulture);
+        "\u202A" + utc.ToLocalTime().ToString("yyyy/MM/dd hh:mm tt", DateCulture) + "\u202C";
 
     private static bool ContainsArabic(string text) => text.Any(c => c is >= '؀' and <= 'ۿ');
 
     private static string MaskKey(string key) =>
         key.Length <= 4 ? key : new string('•', Math.Min(key.Length - 4, 8)) + key[^4..];
 
-    /// <summary>إخراج المستخدم إلى شاشة الدخول مع سبب الإخراج.</summary>
-    private void Kick(string reason, bool forgetKey)
+    /// <summary>إخراج المستخدم إلى شاشة الدخول مع سبب الإخراج (null = تسجيل خروج عادي).</summary>
+    private void Kick(string? reason, bool forgetKey)
     {
         if (_kicked)
             return;
@@ -214,10 +223,240 @@ public partial class MainWindow : Window
         _settings.Mode = ModeSmoothRadio.IsChecked == true ? "Smooth"
             : ModeStrongRadio.IsChecked == true ? "Strong"
             : "Balanced";
+        _settings.AlwaysOnTop = Topmost;
         _settings.Target = TargetChestRadio.IsChecked == true ? "Chest"
             : TargetBodyRadio.IsChecked == true ? "Body"
             : "Head";
         _settings.Save();
+    }
+
+    // ------------------------------------------------------------------
+    // التنقل بين الصفحات
+    // ------------------------------------------------------------------
+
+    private void Nav_Checked(object sender, RoutedEventArgs e)
+    {
+        // يُستدعى أيضاً أثناء تحميل الواجهة، والصفحة الرئيسية ظاهرة افتراضياً
+        if (!IsLoaded)
+            return;
+
+        FrameworkElement page = sender == NavSettings ? SettingsPage
+            : sender == NavContact ? ContactPage
+            : HomePage;
+        ShowPage(page);
+    }
+
+    private void ShowPage(FrameworkElement page)
+    {
+        foreach (var p in new FrameworkElement[] { HomePage, SettingsPage, ContactPage })
+            p.Visibility = p == page ? Visibility.Visible : Visibility.Collapsed;
+
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        page.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)));
+        if (page.RenderTransform is TranslateTransform move)
+            move.BeginAnimation(TranslateTransform.YProperty,
+                new DoubleAnimation(12, 0, TimeSpan.FromMilliseconds(320)) { EasingFunction = ease });
+    }
+
+    // ------------------------------------------------------------------
+    // صفحة الإعدادات
+    // ------------------------------------------------------------------
+
+    private void InitializeSettingsPage()
+    {
+        string version = "v" + AppConfig.CurrentVersion.ToString(CultureInfo.InvariantCulture);
+        SettingsVersionText.Text = version;
+        SidebarVersionText.Text = version;
+
+        Topmost = _settings.AlwaysOnTop;
+        AlwaysOnTopToggle.IsChecked = _settings.AlwaysOnTop;
+        StartWithWindowsToggle.IsChecked = StartupRegistration.IsEnabled;
+        RememberKeyToggle.IsChecked = RememberedKeyStore.Load() is not null;
+
+        WindowsUserText.Text = DeviceInfo.WindowsUserName;
+        DeviceIdText.Text = DeviceInfo.DeviceId[..12] + "…";
+    }
+
+    private void StartWithWindowsToggle_Click(object sender, RoutedEventArgs e)
+    {
+        bool enabled = StartWithWindowsToggle.IsChecked == true;
+        if (!StartupRegistration.Set(enabled))
+            StartWithWindowsToggle.IsChecked = !enabled;
+    }
+
+    private void AlwaysOnTopToggle_Click(object sender, RoutedEventArgs e)
+    {
+        Topmost = AlwaysOnTopToggle.IsChecked == true;
+        SaveSettings();
+    }
+
+    private void RememberKeyToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (RememberKeyToggle.IsChecked == true)
+            RememberedKeyStore.Save(_monitor.License.Key);
+        else
+            RememberedKeyStore.Clear();
+    }
+
+    private void ResetAimSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        ApplySettings(new AimSettings());
+        SaveSettings();
+        NavHome.IsChecked = true;
+    }
+
+    private void CopyDeviceIdButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (TryCopy(DeviceInfo.DeviceId))
+            FlashText(CopyDeviceIdButton, "تم ✓", "نسخ");
+    }
+
+    private void LogoutButton_Click(object sender, RoutedEventArgs e)
+    {
+        RememberedKeyStore.Clear();
+        Kick(null, forgetKey: true);
+    }
+
+    private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_checkingUpdate)
+            return;
+        _checkingUpdate = true;
+
+        NavSettings.IsChecked = true;
+        CheckUpdateButton.IsEnabled = false;
+        SidebarUpdateButton.IsEnabled = false;
+        CheckUpdateButtonText.Text = "جاري التحقق...";
+        UpdateStatusBorder.Visibility = Visibility.Collapsed;
+
+        try
+        {
+            UpdateInfo? update = await UpdateService.CheckAsync();
+            if (update is not null)
+            {
+                // تحديث إجباري: شاشة التحديث تحل محل التطبيق
+                _kicked = true;
+                new UpdateWindow(update).Show();
+                Close();
+                return;
+            }
+
+            ShowUpdateStatus(true, $"أنت تستخدم آخر إصدار ({SettingsVersionText.Text})");
+        }
+        catch (Exception ex)
+        {
+            ShowUpdateStatus(false, "تعذّر التحقق من التحديثات: " + LicenseService.DescribeError(ex));
+        }
+        finally
+        {
+            _checkingUpdate = false;
+            CheckUpdateButton.IsEnabled = true;
+            SidebarUpdateButton.IsEnabled = true;
+            CheckUpdateButtonText.Text = "التحقق من التحديثات";
+        }
+    }
+
+    private void ShowUpdateStatus(bool success, string message)
+    {
+        var color = success ? Color.FromRgb(0x2E, 0xCC, 0x71) : Color.FromRgb(0xE0, 0x30, 0x4F);
+        var textColor = new SolidColorBrush(success ? Color.FromRgb(0x7F, 0xD8, 0xA0) : Color.FromRgb(0xFF, 0x6B, 0x8B));
+        UpdateStatusBorder.Background = new SolidColorBrush(Color.FromArgb(0x14, color.R, color.G, color.B));
+        UpdateStatusBorder.BorderBrush = new SolidColorBrush(Color.FromArgb(0x26, color.R, color.G, color.B));
+        UpdateStatusIcon.Text = success ? "\uE73E" : "\uE783";
+        UpdateStatusIcon.Foreground = textColor;
+        UpdateStatusText.Foreground = textColor;
+        UpdateStatusText.Text = message;
+        UpdateStatusBorder.Visibility = Visibility.Visible;
+    }
+
+    private void RestartButton_Click(object sender, RoutedEventArgs e)
+    {
+        SaveSettings();
+        _kicked = true;
+        _monitor.Stop();
+        AppRestarter.Restart();
+    }
+
+    // ------------------------------------------------------------------
+    // صفحة تواصل معنا
+    // ------------------------------------------------------------------
+
+    private void InitializeContactPage()
+    {
+        SetupContactButton(DiscordButton, AppConfig.DiscordUrl);
+        SetupContactButton(WhatsAppButton, AppConfig.WhatsAppUrl);
+        SetupContactButton(TelegramButton, AppConfig.TelegramUrl);
+        SetupContactButton(StoreButton, AppConfig.StoreUrl);
+    }
+
+    private static void SetupContactButton(System.Windows.Controls.Button button, string url)
+    {
+        bool available = !string.IsNullOrWhiteSpace(url);
+        button.IsEnabled = available;
+        button.Content = available ? "فتح" : "قريباً";
+    }
+
+    private void ContactButton_Click(object sender, RoutedEventArgs e)
+    {
+        string url = (sender as FrameworkElement)?.Tag switch
+        {
+            "Discord" => AppConfig.DiscordUrl,
+            "WhatsApp" => AppConfig.WhatsAppUrl,
+            "Telegram" => AppConfig.TelegramUrl,
+            "Store" => AppConfig.StoreUrl,
+            _ => "",
+        };
+        UrlLauncher.Open(url);
+    }
+
+    private void CopySupportInfoButton_Click(object sender, RoutedEventArgs e)
+    {
+        LicenseInfo license = _monitor.License;
+        string info = string.Join(Environment.NewLine,
+            $"الكود: {license.Key}",
+            $"نوع الاشتراك: {license.Plan.DisplayName}",
+            $"ينتهي: {(license.ExpiresUtc is { } expires ? expires.ToLocalTime().ToString("yyyy/MM/dd hh:mm tt", DateCulture) : "لا ينتهي")}",
+            $"معرّف الجهاز: {DeviceInfo.DeviceId}",
+            $"مستخدم ويندوز: {DeviceInfo.WindowsUserName}",
+            $"الإصدار: v{AppConfig.CurrentVersion.ToString(CultureInfo.InvariantCulture)}");
+
+        if (TryCopy(info))
+            FlashText(CopySupportInfoText, "تم النسخ ✓", "نسخ بيانات الدعم");
+    }
+
+    private static bool TryCopy(string text)
+    {
+        try
+        {
+            Clipboard.SetText(text);
+            return true;
+        }
+        catch
+        {
+            // الحافظة مستخدمة من برنامج آخر
+            return false;
+        }
+    }
+
+    /// <summary>يغيّر نص الزر مؤقتاً (مثل "تم النسخ ✓") ثم يعيده.</summary>
+    private static void FlashText(object target, string temporary, string original)
+    {
+        void Set(string text)
+        {
+            if (target is System.Windows.Controls.TextBlock block)
+                block.Text = text;
+            else if (target is System.Windows.Controls.ContentControl control)
+                control.Content = text;
+        }
+
+        Set(temporary);
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            Set(original);
+        };
+        timer.Start();
     }
 
     // ------------------------------------------------------------------

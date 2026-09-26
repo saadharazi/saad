@@ -22,11 +22,22 @@ public static class AppConfig
     /// </summary>
     public const double CurrentVersion = 20.2;
 
-    /// <summary>رابط المتجر (زر "شراء كود").</summary>
+    // ===== روابط التواصل (اتركها فارغة لإخفاء الزر وإظهار "قريباً") =====
+
+    /// <summary>رابط المتجر (زر "شراء كود" وبطاقة المتجر).</summary>
     public const string StoreUrl = "";
 
-    /// <summary>رابط الدعم الفني (زر "الدعم الفني").</summary>
+    /// <summary>رابط الدعم الفني (زر "الدعم الفني" في شاشة الدخول).</summary>
     public const string SupportUrl = "";
+
+    /// <summary>رابط سيرفر ديسكورد، مثل https://discord.gg/xxxx</summary>
+    public const string DiscordUrl = "";
+
+    /// <summary>رابط واتساب، مثل https://wa.me/9665XXXXXXXX</summary>
+    public const string WhatsAppUrl = "";
+
+    /// <summary>رابط تيليجرام، مثل https://t.me/xxxx</summary>
+    public const string TelegramUrl = "";
 
     /// <summary>المدة القصوى المسموح بها بدون اتصال بالخادم قبل إخراج المستخدم.</summary>
     public static readonly TimeSpan MaxOfflineDuration = TimeSpan.FromMinutes(3);

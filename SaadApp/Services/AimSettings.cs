@@ -22,6 +22,9 @@ public sealed class AimSettings
     public bool ClosestTarget { get; set; }
     public string Target { get; set; } = "Head";
 
+    /// <summary>إبقاء نافذة التطبيق فوق كل النوافذ.</summary>
+    public bool AlwaysOnTop { get; set; }
+
     public static AimSettings Load()
     {
         try
